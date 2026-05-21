@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@layer base {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  html {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  :focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .dtmf-key {
+    min-width: 44px;
+    min-height: 44px;
+    transition:
+      transform 150ms ease,
+      box-shadow 150ms ease;
+  }
+
+  .dtmf-key:active,
+  .dtmf-key[data-active="true"] {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 2px rgb(34 211 238 / 0.6);
+  }
+
+  .retro-panel {
+    @apply rounded-2xl border border-emerald-700/50 bg-emerald-900 p-4 text-emerald-50 shadow-lg;
+  }
+
+  .modern-panel {
+    @apply rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-neutral-100 shadow-lg;
+  }
+
+  .rotary-panel {
+    @apply rounded-2xl border border-zinc-300 bg-zinc-100 p-4 text-zinc-900 shadow-lg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  .dtmf-key {
+    transition: none;
+  }
+}

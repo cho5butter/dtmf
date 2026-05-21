@@ -9,6 +9,9 @@ export default defineConfig({
   integrations: [solid()],
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      dedupe: ["solid-js", "solid-js/web"],
+    },
     build: {
       target: "es2022",
     },
