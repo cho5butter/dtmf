@@ -1,0 +1,30 @@
+{
+  "repo_notes": "仕様駆動開発（Spec-Driven Development）テンプレート。AIエージェントが要件定義→設計→計画→実装のフェーズゲート式ワークフローに従って開発を行うための設定・ルールを提供する。",
+  "pages": [
+    {
+      "title": "ワークフロー概要",
+      "description": "フェーズゲート式の開発ワークフロー（要件定義→設計→計画→実装）とTDDガイドライン",
+      "files": ["spec/workflow.md"]
+    },
+    {
+      "title": "要件定義テンプレート",
+      "description": "ユーザーストーリー、機能要件、非機能要件、受け入れ基準のテンプレート",
+      "files": ["spec/requirements.md"]
+    },
+    {
+      "title": "設計テンプレート",
+      "description": "アーキテクチャ、データモデル、API設計、ADRのテンプレート",
+      "files": ["spec/design.md"]
+    },
+    {
+      "title": "品質ゲート",
+      "description": "リント・ビルド・テストの自動実行スクリプトとpre-commitフック",
+      "files": ["scripts/quality-gate.sh", "scripts/lint.sh", "scripts/build.sh", "scripts/test.sh", "hooks/pre-commit"]
+    },
+    {
+      "title": "エージェント設定",
+      "description": "各AIエージェント向けのルール設定ファイル一覧",
+      "files": ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "REVIEW.md"]
+    }
+  ]
+}

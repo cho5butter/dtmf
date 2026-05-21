@@ -1,0 +1,21 @@
+{
+  "name": "SDD Template",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "postCreateCommand": "bash scripts/setup-hooks.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

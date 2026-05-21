@@ -1,0 +1,94 @@
+# ===================
+# OS
+# ===================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ===================
+# IDE / Editor
+# ===================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ===================
+# Node.js / TypeScript
+# ===================
+node_modules/
+dist/
+build/
+.next/
+out/
+.nuxt/
+.turbo/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================
+# Python
+# ===================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ===================
+# Go
+# ===================
+bin/
+vendor/
+
+# ===================
+# .NET / C#
+# ===================
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+
+# ===================
+# Swift / Xcode
+# ===================
+*.xcuserdata
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+DerivedData/
+.build/
+
+# ===================
+# Kotlin / Android
+# ===================
+*.apk
+*.aab
+.gradle/
+local.properties
+
+# ===================
+# General
+# ===================
+*.log
+*.tmp
+*.bak
+coverage/

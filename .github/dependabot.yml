@@ -1,0 +1,102 @@
+# Dependabot 設定
+# 週1回パッケージの脆弱性を確認し、更新PRを自動作成する
+# 詳細: https://docs.github.com/code-security/dependabot
+#
+# 脆弱性アラートは GitHub の Security タブに自動表示される
+# セキュリティ更新が必要な場合は Dependabot が自動的にPRを作成する
+
+version: 2
+updates:
+  # GitHub Actions のワークフロー依存（このテンプレートでは標準で有効）
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "設定"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # 以下はプロジェクトで使用する技術スタックに応じてコメントアウトを解除すること
+  # （対応するマニフェストファイル: package.json / requirements.txt / go.mod / Gemfile / Cargo.toml 等）
+
+  # npm / pnpm / yarn (Node.js, TypeScript)
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "Asia/Tokyo"
+  #   open-pull-requests-limit: 10
+  #   commit-message:
+  #     prefix: "設定"
+  #     include: "scope"
+  #   labels:
+  #     - "dependencies"
+  #     - "npm"
+
+  # pip (Python)
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "Asia/Tokyo"
+  #   open-pull-requests-limit: 10
+  #   commit-message:
+  #     prefix: "設定"
+  #     include: "scope"
+  #   labels:
+  #     - "dependencies"
+  #     - "pip"
+
+  # gomod (Go)
+  # - package-ecosystem: "gomod"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "Asia/Tokyo"
+  #   open-pull-requests-limit: 10
+  #   commit-message:
+  #     prefix: "設定"
+  #     include: "scope"
+  #   labels:
+  #     - "dependencies"
+  #     - "gomod"
+
+  # bundler (Ruby)
+  # - package-ecosystem: "bundler"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "Asia/Tokyo"
+
+  # cargo (Rust)
+  # - package-ecosystem: "cargo"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "Asia/Tokyo"
+
+  # docker (Dockerfile)
+  # - package-ecosystem: "docker"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #     time: "09:00"
+  #     timezone: "Asia/Tokyo"
