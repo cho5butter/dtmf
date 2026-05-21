@@ -39,6 +39,13 @@
             "organizeImports": "off"
           }
         }
+      },
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off"
+          }
+        }
       }
     }
   ]

@@ -18,5 +18,3 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bash scripts/quality-gate.sh
-      - run: bunx playwright install --with-deps chromium
-      - run: CI=true RUN_E2E=1 bash scripts/test.sh

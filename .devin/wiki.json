@@ -19,7 +19,13 @@
     {
       "title": "品質ゲート",
       "description": "リント・ビルド・テストの自動実行スクリプトとpre-commitフック",
-      "files": ["scripts/quality-gate.sh", "scripts/lint.sh", "scripts/build.sh", "scripts/test.sh", "hooks/pre-commit"]
+      "files": [
+        "scripts/quality-gate.sh",
+        "scripts/lint.sh",
+        "scripts/build.sh",
+        "scripts/test.sh",
+        "hooks/pre-commit"
+      ]
     },
     {
       "title": "エージェント設定",

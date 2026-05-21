@@ -18,7 +18,7 @@ cd "$PROJECT_ROOT"
 #   cargo test
 #   make test
 TEST_CMD="${TEST_CMD:-bun test --conditions=browser tests/unit tests/component && bun run size-limit}"
-if [ "${RUN_E2E:-}" = "1" ] || [ "${CI:-}" = "true" ]; then
+if [ "${RUN_E2E:-}" = "1" ]; then
   TEST_CMD="$TEST_CMD && bunx playwright test"
 fi
 

@@ -87,21 +87,21 @@ export default function PhoneApp() {
         </Show>
         <NumberInput />
         <ModeSwitcher />
-        <Show when={appState.mode === "retro"}>
+        {appState.mode === "retro" && (
           <div class="retro-panel">
             <DialPad />
           </div>
-        </Show>
-        <Show when={appState.mode === "modern"}>
+        )}
+        {appState.mode === "modern" && (
           <div class="modern-panel">
             <ModernPad />
           </div>
-        </Show>
-        <Show when={appState.mode === "rotary"}>
+        )}
+        {appState.mode === "rotary" && (
           <div class="rotary-panel">
             <RotaryDial />
           </div>
-        </Show>
+        )}
         <PlaybackControls />
         <SettingsPanel />
         <DetailPanel />
