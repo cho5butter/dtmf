@@ -33,7 +33,7 @@
     "@tailwindcss/vite": "4.3.0",
     "happy-dom": "20.9.0",
     "size-limit": "12.1.0",
-    "tailwindcss": "4.2.1",
+    "tailwindcss": "4.3.0",
     "typescript": "5.8.3"
   },
   "size-limit": [
