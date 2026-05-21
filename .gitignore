@@ -21,6 +21,7 @@ Thumbs.db
 # Node.js / TypeScript
 # ===================
 node_modules/
+.astro/
 dist/
 build/
 .next/

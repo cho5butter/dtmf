@@ -1,0 +1,6 @@
+[test]
+preload = ["./tests/helpers/setup.ts"]
+
+[jsx]
+runtime = "solid"
+importSource = "solid-js"

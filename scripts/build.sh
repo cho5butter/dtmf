@@ -16,8 +16,7 @@ cd "$PROJECT_ROOT"
 #   python -m build
 #   go build ./...
 #   cargo build --release
-# TODO: プロジェクトに合わせて以下を書き換えてください
-BUILD_CMD="${BUILD_CMD:-echo 'ビルドコマンドが未設定です。scripts/build.sh を編集してください。'}"
+BUILD_CMD="${BUILD_CMD:-bun astro build}"
 
 echo "=== ビルド実行 ==="
 eval "$BUILD_CMD"

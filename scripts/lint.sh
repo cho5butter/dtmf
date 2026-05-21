@@ -16,9 +16,8 @@ cd "$PROJECT_ROOT"
 #   ruff check --fix . && ruff format .
 #   golangci-lint run --fix
 #   cargo fmt && cargo clippy --fix
-# TODO: プロジェクトに合わせて以下を書き換えてください
-LINT_CMD="${LINT_CMD:-echo 'リントコマンドが未設定です。scripts/lint.sh を編集してください。'}"
-FORMAT_CMD="${FORMAT_CMD:-echo 'フォーマットコマンドが未設定です。scripts/lint.sh を編集してください。'}"
+LINT_CMD="${LINT_CMD:-bun biome ci .}"
+FORMAT_CMD="${FORMAT_CMD:-bun biome check --write .}"
 
 echo "=== リント実行 ==="
 eval "$LINT_CMD"

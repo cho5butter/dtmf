@@ -26,21 +26,20 @@ updates:
   # 以下はプロジェクトで使用する技術スタックに応じてコメントアウトを解除すること
   # （対応するマニフェストファイル: package.json / requirements.txt / go.mod / Gemfile / Cargo.toml 等）
 
-  # npm / pnpm / yarn (Node.js, TypeScript)
-  # - package-ecosystem: "npm"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #     day: "monday"
-  #     time: "09:00"
-  #     timezone: "Asia/Tokyo"
-  #   open-pull-requests-limit: 10
-  #   commit-message:
-  #     prefix: "設定"
-  #     include: "scope"
-  #   labels:
-  #     - "dependencies"
-  #     - "npm"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "設定"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
 
   # pip (Python)
   # - package-ecosystem: "pip"
