@@ -17,8 +17,10 @@ cd "$PROJECT_ROOT"
 #   go test ./...
 #   cargo test
 #   make test
-# TODO: プロジェクトに合わせて以下を書き換えてください
-TEST_CMD="${TEST_CMD:-echo 'テストコマンドが未設定です。scripts/test.sh を編集してください。'}"
+TEST_CMD="${TEST_CMD:-bun test --conditions=browser tests/unit tests/component && bun run size-limit}"
+if [ "${RUN_E2E:-}" = "1" ] || [ "${CI:-}" = "true" ]; then
+  TEST_CMD="$TEST_CMD && bunx playwright test"
+fi
 
 echo "=== テスト実行 ==="
 eval "$TEST_CMD"
