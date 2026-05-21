@@ -1,14 +1,46 @@
 /** @jsxImportSource solid-js */
 import { onMount, Show } from "solid-js";
 import { createDtmfEngine } from "../lib/dtmf/engine";
+import { isDtmfKey } from "../lib/dtmf/frequencyMap";
 import { createAutoDialSequencer } from "../lib/dtmf/sequencer";
 import { ServicesProvider } from "../lib/state/context";
-import { appState, setAudioSupported, setContextSuspended } from "../lib/state/store";
+import {
+  appState,
+  resetPlayback,
+  setAudioSupported,
+  setContextSuspended,
+  setPlayback,
+} from "../lib/state/store";
+import DialPad from "./DialPad";
+import ModernPad from "./ModernPad";
+import ModeSwitcher from "./ModeSwitcher";
 import NumberInput from "./NumberInput";
+import RotaryDial from "./RotaryDial";
 import Toast from "./Toast";
 
 const engine = createDtmfEngine();
 const sequencer = createAutoDialSequencer(engine);
+
+function handleKeyboard(e: KeyboardEvent) {
+  const key = e.key;
+  if (key === "Escape") {
+    engine.stopAll();
+    resetPlayback();
+    return;
+  }
+  if (isDtmfKey(key)) {
+    e.preventDefault();
+    void engine.ensureContext();
+    engine.pressKey(key);
+    setPlayback("key_held");
+    const onUp = () => {
+      engine.releaseKey();
+      setPlayback("idle");
+      window.removeEventListener("keyup", onUp);
+    };
+    window.addEventListener("keyup", onUp);
+  }
+}
 
 export default function PhoneApp() {
   onMount(() => {
@@ -18,7 +50,11 @@ export default function PhoneApp() {
       document.getElementById("audio-unsupported")?.classList.remove("hidden");
     }
     engine.setVolume(appState.settings.volume);
-    return () => engine.stopAll();
+    document.addEventListener("keydown", handleKeyboard);
+    return () => {
+      document.removeEventListener("keydown", handleKeyboard);
+      engine.stopAll();
+    };
   });
 
   const onFirstInteraction = () => {
@@ -46,6 +82,22 @@ export default function PhoneApp() {
           </p>
         </Show>
         <NumberInput />
+        <ModeSwitcher />
+        <Show when={appState.mode === "retro"}>
+          <div class="retro-panel">
+            <DialPad />
+          </div>
+        </Show>
+        <Show when={appState.mode === "modern"}>
+          <div class="modern-panel">
+            <ModernPad />
+          </div>
+        </Show>
+        <Show when={appState.mode === "rotary"}>
+          <div class="rotary-panel">
+            <RotaryDial />
+          </div>
+        </Show>
       </div>
       <Toast />
     </ServicesProvider>
