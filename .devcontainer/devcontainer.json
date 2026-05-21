@@ -11,10 +11,7 @@
   "postCreateCommand": "bash scripts/setup-hooks.sh",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "EditorConfig.EditorConfig",
-        "streetsidesoftware.code-spell-checker"
-      ]
+      "extensions": ["EditorConfig.EditorConfig", "streetsidesoftware.code-spell-checker"]
     }
   },
   "remoteUser": "vscode"
