@@ -11,12 +11,16 @@ import {
   setContextSuspended,
   setPlayback,
 } from "../lib/state/store";
+import DetailPanel from "./DetailPanel";
 import DialPad from "./DialPad";
 import ModernPad from "./ModernPad";
 import ModeSwitcher from "./ModeSwitcher";
 import NumberInput from "./NumberInput";
+import PlaybackControls from "./PlaybackControls";
 import RotaryDial from "./RotaryDial";
+import SettingsPanel from "./SettingsPanel";
 import Toast from "./Toast";
+import Visualizer from "./Visualizer";
 
 const engine = createDtmfEngine();
 const sequencer = createAutoDialSequencer(engine);
@@ -98,8 +102,17 @@ export default function PhoneApp() {
             <RotaryDial />
           </div>
         </Show>
+        <PlaybackControls />
+        <SettingsPanel />
+        <DetailPanel />
+        <Visualizer />
       </div>
       <Toast />
+      <div class="sr-only" aria-live="polite" id="playback-announcer">
+        {appState.playback === "auto_running" && appState.currentDigitIdx >= 0
+          ? `再生中: ${appState.digits[appState.currentDigitIdx]}`
+          : ""}
+      </div>
     </ServicesProvider>
   );
 }
