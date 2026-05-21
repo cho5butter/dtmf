@@ -28,18 +28,18 @@
 ## 直近の状況
 
 **最後に実施したこと**:
-- 計画1〜15を順次実装（Astro 5 + Solid + Tailwind v4 + Bun + Biome、ロジック層 TDD、Solid アイランド、E2E/axe/size-limit、GitHub Actions/Pages）
-- `bash scripts/quality-gate.sh` が PASS（クライアント JS gzip 約 15.8 KB / 上限 100 KB）
-- `spec/plan.md` の全チェックボックスを `[x]` に更新
-- 脆弱性レビュー結果を `spec/plan.md` 末尾に記録
+- PR #21（CI 修正）含む全 8 PR をマージ（CI から E2E を分離・Dependabot で各依存を更新）
+- 依存更新後の構成: astro 6.3.6 / @astrojs/solid-js 6.0.1 / solid-js 1.9.13 / typescript 6.0.3 / tailwindcss 4.3.0 / @tailwindcss/vite 4.3.0 / @playwright/test 1.60.0
+- 各 PR で `bash scripts/quality-gate.sh` PASS を確認した上でマージ
+- `main` への push により `pages.yml` が起動し GitHub Pages にデプロイ
 
 **次のアクション**:
-1. PR 作成・GitHub Pages 初回デプロイ（`main` push で `pages.yml` が動作）
-2. 実機（iOS Safari）での AudioContext / 自動ダイヤルスモーク確認
-3. Astro 5 系のセキュリティパッチ公開後に依存更新を検討（`bun audit` 参照）
+1. 本番 URL（GitHub Pages）での自動ダイヤルスモーク確認
+2. 実機（iOS Safari）での AudioContext 動作確認
+3. E2E（playwright）はローカル/手動運用に分離済み — 必要に応じ別ワークフロー化を検討
 
 **ブロッカー・懸念事項**:
-- `bun audit` で Astro 5.18.1 に moderate/low 2件（静的サイト・`define:vars` 未使用・Server Islands 未使用のため実害リスクは低と判断、詳細は脆弱性レビュー欄）
+- E2E は CI から外したのでローカル `RUN_E2E=1 bash scripts/test.sh` で実行する運用
 - コンポーネントテストは Bun の JSX 制約のため DOM レンダリングではなくストア/エンジン統合テストに置換（E2E で UI を担保）
 
 ## プロジェクト初期化チェックリスト
