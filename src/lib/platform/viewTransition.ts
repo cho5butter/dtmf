@@ -1,14 +1,4 @@
+/** UI 更新。View Transition API は環境差で E2E が不安定なため同期更新のみ。 */
 export function runViewTransition(update: () => void): void {
-  if (
-    typeof document !== "undefined" &&
-    typeof window !== "undefined" &&
-    "startViewTransition" in document &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  ) {
-    document.startViewTransition(() => {
-      update();
-    });
-    return;
-  }
   update();
 }

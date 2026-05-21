@@ -18,6 +18,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
+    reducedMotion: "reduce",
   },
   projects: process.env.CI ? [allProjects[0]] : [...allProjects],
   webServer: {
