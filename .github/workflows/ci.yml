@@ -16,5 +16,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install --frozen-lockfile
-      - run: bash scripts/quality-gate.sh
+      - run: bun --version && bun install --frozen-lockfile
+      - run: bash scripts/lint.sh
+      - run: bash scripts/build.sh
+      - run: bash scripts/test.sh
