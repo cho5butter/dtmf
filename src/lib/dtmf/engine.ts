@@ -11,6 +11,11 @@ export interface DtmfEngine {
   pressKey(key: DtmfKey, opts?: { maxMs?: number }): void;
   releaseKey(): void;
   playTone(key: DtmfKey, durationMs: number, when?: number): Promise<void>;
+  /**
+   * 回転ダイヤル戻り中のパルスクリック音を `count` 個、`intervalMs` 間隔で再生する。
+   * 黒電話のガラガラ機構を模した短い帯域ノイズで、DTMF とは別レイヤ。
+   */
+  playRotaryPulses(count: number, intervalMs: number): void;
   stopAll(): void;
   setVolume(v: number): void;
   getAnalyser(): AnalyserNode | null;
@@ -85,6 +90,62 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
       disposeTone(tone);
     }
     scheduled.length = 0;
+  };
+
+  const activePulseTimers: Array<ReturnType<typeof setTimeout>> = [];
+  const activePulseSources: AudioNode[] = [];
+
+  const stopPulses = () => {
+    for (const t of activePulseTimers) clearTimeout(t);
+    activePulseTimers.length = 0;
+    for (const node of activePulseSources) {
+      try {
+        (node as AudioBufferSourceNode).stop?.();
+      } catch {
+        /* already stopped */
+      }
+      node.disconnect();
+    }
+    activePulseSources.length = 0;
+  };
+
+  const scheduleClick = (when: number) => {
+    const audioCtx = getContext();
+    if (!audioCtx || !masterGain) return;
+    // 短い帯域ノイズで「カチッ」を表現
+    const durationSec = 0.025;
+    const sampleRate = audioCtx.sampleRate;
+    const length = Math.max(1, Math.floor(durationSec * sampleRate));
+    const buffer = audioCtx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) {
+      const t = i / length;
+      // 鋭い立ち上がり → 急減衰
+      const envelope = (1 - t) ** 2;
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    const clickGain = audioCtx.createGain();
+    clickGain.gain.value = 0.35;
+    // 高域強調で「カチッ」感を出すハイパスを通す
+    const hp = audioCtx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 1800;
+    source.connect(hp);
+    hp.connect(clickGain);
+    clickGain.connect(masterGain);
+    source.start(when);
+    activePulseSources.push(source, hp, clickGain);
+    source.onended = () => {
+      try {
+        source.disconnect();
+        hp.disconnect();
+        clickGain.disconnect();
+      } catch {
+        /* noop */
+      }
+    };
   };
 
   const scheduleTone = (key: DtmfKey, durationMs: number, when: number): Promise<void> => {
@@ -179,9 +240,20 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
       return scheduleTone(key, durationMs, start);
     },
 
+    playRotaryPulses(count: number, intervalMs: number) {
+      const audioCtx = getContext();
+      if (!audioCtx || count <= 0) return;
+      stopPulses();
+      const startSec = audioCtx.currentTime;
+      for (let i = 0; i < count; i++) {
+        scheduleClick(startSec + (i * intervalMs) / 1000);
+      }
+    },
+
     stopAll() {
       stopActive();
       stopScheduled();
+      stopPulses();
     },
 
     setVolume(v: number) {

@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3）完了 — レビュー待ち
-**ステータス**: Phase 3 実装後レビュー修正として、remote `main` 最新取り込み後に回転ダイヤル挙動、発音同期波形、デスクトップレイアウトの最終調整を実施。さらに 2026-05-23 追加レビューで回転ダイヤルの指止め金（赤線）を抑制色＋小型化、PC幅で CONFIG/DETAILS パネルを自動展開するよう修正。`bash scripts/quality-gate.sh` PASS（64 tests / size-limit 17.99 KB gzip）。
+**フェーズ**: 実装（Phase 3）完了 — レビュー待ち（実機相当ダイヤル補正 PR）
+**ステータス**: Phase 3 レビュー修正の継続として、回転ダイヤルを NTT 600/601 形相当の実機ジオメトリ・挙動（5時方向の指止め、`base - digit_angle` 表示、等速戻り、戻り中パルス音、指挿入インジケータ）に揃え直し。`main` 取り込み済みの PC パネル自動展開・波形同期等と統合。`bash scripts/quality-gate.sh` PASS（67 tests / size-limit 18.39 KB gzip）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -42,27 +42,24 @@
 ## 直近の状況
 
 **最後に実施したこと**:
-- `origin/main` の最新（`c5c88a6`）を fast-forward で取り込み
-- 回転ダイヤルを「止め金まで回る → 指離しを待つ → 戻り始めと同時に発音」に修正
-- 回転中の pointer capture / release waiter を追加し、指が外へ出た場合も戻り処理へ進めるよう調整
-- 回転ダイヤルの発音中に選択数字を active 表示し、戻り完了後に状態を解除
-- パッド/キーボード/回転ダイヤルの `playback` 状態を実際の発音タイミングに合わせ、波形が音と同期するよう修正
-- Web Audio の analyser がフラットな環境でも、再生中の DTMF キーの2周波から波形を生成するフォールバックを追加
-- idle 時の波形を静かな基準線に変更し、再生中のみ波形が動くよう調整
-- PC レイアウトを表示部フル幅 + 下段2カラムに再構成し、モード切替下の大きな空白を解消
-- PC 幅の再生ボタンを5分割アイコンボタンにして縦積みを避け、各ボタンに `title` を追加
-- TDD: idle/DTMF 波形、PC レイアウト契約、回転角度のテストを追加/更新
-- 品質ゲート: `bash scripts/quality-gate.sh` PASS（64 tests / size-limit 17.99 KB gzip）
-- Browser 目視確認: `http://127.0.0.1:4322/dtmf/` で PC レイアウト、回転戻り、戻り中の波形同期を確認
-- **2026-05-23 追加レビュー**: 回転ダイヤル `.rotary__stop` が `--signal`（赤）かつ大きすぎて数字「2」「3」と重なる問題を修正。`--ink-50` のグレー＋小型化＋傾けて文字盤右下に再配置
-- `SettingsPanel` / `DetailPanel` を PC 幅（>=1024px）でデフォルト展開するよう `onMount` で `matchMedia` 判定して `open` 属性を付与
-- `.gitignore` に `.claude/` を追加（preview server 用 `launch.json` 等を除外）
-- 品質ゲート再実行: 64 tests / 17.99 KB gzip PASS
+
+*既存（`main` マージ済み）*:
+- 回転ダイヤル「止め金まで回る → 指離し → 戻り」、波形同期、PC レイアウト再構成
+- `SettingsPanel` / `DetailPanel` を PC 幅（>=1024px）でデフォルト展開
+- `.gitignore` に `.claude/` を追加
+
+*実機相当ダイヤル補正（本 PR / 2026-05-23）*:
+- ユーザー指示「実物のダイヤル電話を解析してもっと現実に近づけて」
+- `spec/requirements.md` F-003 改訂、`spec/design.md` P3-9 追加
+- `rotaryAngle.ts`: 半ステップ 18°、`pulseCount` / `returnDurationMs`
+- `engine.ts`: `playRotaryPulses`（戻り中クリック音）
+- `RotaryDial.tsx`: 等速戻り、DTMF は戻り完了後、指穴 `data-active`
+- `global.css`: 5時方向指止め、`base - digit_angle` 数字配置、指穴ハイライト
+- 品質ゲート PASS（67 tests / 18.39 KB gzip）
 
 **次のアクション**:
-1. ユーザーが UI 修正内容を確認
-2. 問題なければコミット・PR 作成
-3. 残課題があれば追加修正（必要に応じて spec へ反映）
+1. PR レビュー・マージ後、GitHub Pages で実機相当ダイヤルの挙動を再確認
+2. ユーザーから追加フィードバックがあれば対応
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
