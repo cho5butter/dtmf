@@ -561,8 +561,12 @@ button {
 
 .rotary__face {
   --rotary-size: clamp(240px, 60vw, 340px);
-  --rotary-hole-radius: calc(var(--rotary-size) * -0.29);
-  --rotary-number-radius: calc(var(--rotary-size) * -0.4);
+  /*
+   * 実機の黒電話（NTT 600 形）に合わせ、数字とフィンガーホイールの穴は
+   * 同一半径上に配置する。穴を通して文字盤の数字が見える物理構造。
+   */
+  --rotary-hole-radius: calc(var(--rotary-size) * -0.34);
+  --rotary-number-radius: var(--rotary-hole-radius);
   /*
    * 実機の数字配置に揃える回転基準。
    * 数字穴の論理位置は digitToAngle(N) = N×36° で、これを止め金（5時方向）から
@@ -582,22 +586,29 @@ button {
   box-shadow: var(--shadow-hard);
 }
 
+/*
+ * フィンガーホイール: 文字盤の上に重なる回転ディスク。
+ * 実機は不透明な金属/樹脂板で、十数個の貫通穴が空いている。
+ * Web 上では「縁取りのみの透明ディスク」として表現し、穴は縁取りのみの透明円とすることで
+ * 下層の数字が常時見え、回転に伴って穴と数字の対応関係が変化する。
+ */
 .rotary__wheel {
   position: absolute;
-  inset: 13%;
+  inset: 6%;
   border: 3px solid var(--ink);
   border-radius: 50%;
-  background: var(--paper);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .rotary__wheel::after {
   content: "";
-  width: 26%;
-  height: 26%;
+  width: 24%;
+  height: 24%;
   border: var(--hair);
   border-radius: 50%;
   background: var(--paper);
@@ -614,16 +625,18 @@ button {
 }
 
 .rotary__wheel-hole {
-  border: var(--hair);
-  background: var(--ink);
+  border: 2px solid var(--ink);
+  background: transparent;
   pointer-events: none;
-  transition: background 120ms ease;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
 }
 
-/* ダイヤル中の数字の指穴は信号色で塗り「指が入っている」表現に */
+/* ダイヤル中: 選択された穴を信号色の縁取りで強調（指が入っているリング表現） */
 .rotary__wheel-hole[data-active="true"] {
-  background: var(--signal);
-  box-shadow: inset 0 0 0 2px var(--paper);
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal);
 }
 
 /*
@@ -668,16 +681,16 @@ button {
 .rotary__number-ring {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 1;
 }
 
 .rotary__number {
-  border: var(--hair);
-  background: var(--paper);
+  border: 0;
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -692,8 +705,7 @@ button {
 .rotary__number:hover,
 .rotary__number:focus-visible,
 .rotary__number[data-active="true"] {
-  background: var(--ink);
-  color: var(--paper);
+  color: var(--signal);
 }
 
 .rotary__aux {
