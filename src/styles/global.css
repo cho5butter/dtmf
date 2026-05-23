@@ -562,7 +562,16 @@ button {
 .rotary__face {
   --rotary-size: clamp(240px, 60vw, 340px);
   --rotary-hole-radius: calc(var(--rotary-size) * -0.29);
-  --rotary-number-radius: calc(var(--rotary-size) * -0.38);
+  --rotary-number-radius: calc(var(--rotary-size) * -0.4);
+  /*
+   * 実機の数字配置に揃える回転基準。
+   * 数字穴の論理位置は digitToAngle(N) = N×36° で、これを止め金（5時方向）から
+   * 反時計回り N×36° + 18° の位置に表示する。
+   * 表示位置 = base - digit_angle、base = 150° - 18° = 132°
+   * これにより「1」が3時方向、「0」が止め金のすぐ手前、止め金が5時方向となる。
+   */
+  --rotary-base-rotation: 132deg;
+  --rotary-stop-angle: 150deg;
 
   position: relative;
   width: var(--rotary-size);
@@ -608,19 +617,52 @@ button {
   border: var(--hair);
   background: var(--ink);
   pointer-events: none;
+  transition: background 120ms ease;
 }
 
+/* ダイヤル中の数字の指穴は信号色で塗り「指が入っている」表現に */
+.rotary__wheel-hole[data-active="true"] {
+  background: var(--signal);
+  box-shadow: inset 0 0 0 2px var(--paper);
+}
+
+/*
+ * 指止め: 文字盤の外周から内側に突き出す金属片風の小さなツメ。
+ * face 中心 (top:50%, left:50%) を基準に、12時を 0° として
+ * 時計回りに --rotary-stop-angle 回転した位置に配置。
+ * 数字穴と同じ系統で translateY(負) によりまず 12時方向 (face外周近く) に運び、
+ * その後 rotate() で目的方向 (5時方向) に回す。
+ */
 .rotary__stop {
   position: absolute;
-  right: 8%;
-  bottom: 14%;
-  width: 12px;
-  height: 36px;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: calc(var(--rotary-size) * 0.09);
+  margin-left: -5px;
+  margin-top: 0;
+  transform-origin: 50% 0;
+  /* 外周のすぐ内側から内側へ伸びる金属ツメ（5時方向） */
+  transform: rotate(var(--rotary-stop-angle)) translateY(calc(var(--rotary-size) * -0.34));
   border: var(--hair);
-  background: var(--ink-50);
-  transform: rotate(-32deg);
-  transform-origin: center;
+  background: var(--signal);
   z-index: 4;
+  pointer-events: none;
+}
+
+.rotary__stop::after {
+  /* ツメの先端: ディスク側 (中心側) を向く小さな三角形 */
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid var(--signal);
+  filter: drop-shadow(0 1px 0 var(--ink));
 }
 
 .rotary__number-ring {

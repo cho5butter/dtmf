@@ -2,14 +2,20 @@
 import { createSignal, For, onCleanup } from "solid-js";
 import type { DtmfKey } from "../lib/dtmf/frequencyMap";
 import { isDtmfKey } from "../lib/dtmf/frequencyMap";
-import { digitToAngle, fingerStopAngle, returnAngle } from "../lib/dtmf/rotaryAngle";
+import {
+  digitToAngle,
+  fingerStopAngle,
+  pulseCount,
+  returnAngle,
+  returnDurationMs,
+} from "../lib/dtmf/rotaryAngle";
 import { useServices } from "../lib/state/context";
 import { appState, setPlayback } from "../lib/state/store";
 import { usePadDialRelease, useRotaryDialRelease } from "./useDialRelease";
 
 const MAX_QUEUE = 20;
-const RETURN_MS = 400;
-const WIND_MS = 360;
+const WIND_MS = 280;
+const PULSE_INTERVAL_MS = 100;
 
 export default function RotaryDial() {
   const { engine } = useServices();
@@ -29,9 +35,15 @@ export default function RotaryDial() {
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-  const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+  const easeOut = (t: number) => 1 - (1 - t) ** 2;
+  const linear = (t: number) => t;
 
-  const animateRotation = async (from: number, to: number, duration: number) => {
+  const animateRotation = async (
+    from: number,
+    to: number,
+    duration: number,
+    easing: (t: number) => number = easeOut,
+  ) => {
     if (activeFrame) cancelAnimationFrame(activeFrame);
     const token = ++animationToken;
     if (shouldReduceMotion() || duration <= 0) {
@@ -47,7 +59,7 @@ export default function RotaryDial() {
           return;
         }
         const progress = Math.min(1, (now - startedAt) / duration);
-        setRotation(from + (to - from) * ease(progress));
+        setRotation(from + (to - from) * easing(progress));
         if (progress < 1) {
           activeFrame = requestAnimationFrame(step);
           return;
@@ -87,14 +99,23 @@ export default function RotaryDial() {
     const start = digitToAngle(digit === "0" ? "0" : digit);
     const stop = fingerStopAngle(start);
     setActiveDigit(digit);
-    await animateRotation(0, stop, WIND_MS);
+    // 指で穴を引っ掛けて止め金まで回す（実機では指の感触のあるイージング）
+    await animateRotation(0, stop, WIND_MS, easeOut);
     if (disposed) return;
     recordDigit(digit);
     await waitForFingerRelease();
     if (disposed) return;
     setPlayback("key_held");
+    // 戻り中: 実機ガバナ調速器に倣う等速戻り + N 個のパルス音
+    const pulses = pulseCount(digit);
+    const returnMs = returnDurationMs(digit, PULSE_INTERVAL_MS);
+    if (!shouldReduceMotion()) {
+      engine.playRotaryPulses(pulses, PULSE_INTERVAL_MS);
+    }
     try {
-      await Promise.all([releaseSession(), animateRotation(stop, returnAngle(stop), RETURN_MS)]);
+      await animateRotation(stop, returnAngle(stop), returnMs, linear);
+      // 戻り完了直後に DTMF を 1 音だけ送出（公衆電話ダイヤル用途）
+      if (!disposed) await releaseSession();
     } finally {
       if (appState.playback === "key_held") setPlayback("idle");
     }
@@ -145,41 +166,52 @@ export default function RotaryDial() {
       onPointerUp={releaseFinger}
       onPointerCancel={releaseFinger}
     >
-      <p class="rotary__hint">黒電話のように戻る間に鳴ります</p>
+      <p class="rotary__hint">戻る間にカチカチ鳴ります（実機相当）</p>
       <div class="rotary__face">
+        {/* 指止め: ベース盤の5時方向に固定 (--rotary-stop-angle) */}
         <div class="rotary__stop" aria-hidden="true" />
+        {/* 回転ディスク（指穴あり） */}
         <div class="rotary__wheel" style={{ transform: `rotate(${rotation()}deg)` }}>
           <For each={rotaryDigits}>
             {(digit) => (
               <span
                 class="rotary__wheel-hole"
+                data-active={activeDigit() === digit ? "true" : undefined}
                 style={{
-                  transform: `rotate(${digitToAngle(digit)}deg) translateY(var(--rotary-hole-radius))`,
+                  "--digit-angle": `${digitToAngle(digit)}deg`,
+                  transform:
+                    "rotate(calc(var(--rotary-base-rotation) - var(--digit-angle))) translateY(var(--rotary-hole-radius))",
                 }}
                 aria-hidden="true"
               />
             )}
           </For>
         </div>
+        {/* 固定の数字プレート（実機ではディスク外側のリングに数字が印刷） */}
         <div class="rotary__number-ring">
           <For each={rotaryDigits}>
-            {(digit) => (
-              <button
-                type="button"
-                class="rotary__number"
-                style={{
-                  transform: `rotate(${digitToAngle(digit)}deg) translateY(var(--rotary-number-radius)) rotate(-${digitToAngle(digit)}deg)`,
-                }}
-                aria-label={`回転ダイヤル ${digit}`}
-                data-digit={digit}
-                data-active={activeDigit() === digit ? "true" : undefined}
-                disabled={queueFull()}
-                aria-disabled={queueFull()}
-                onPointerDown={() => dialDigit(digit)}
-              >
-                {digit}
-              </button>
-            )}
+            {(digit) => {
+              const angle = digitToAngle(digit);
+              return (
+                <button
+                  type="button"
+                  class="rotary__number"
+                  style={{
+                    "--digit-angle": `${angle}deg`,
+                    transform:
+                      "rotate(calc(var(--rotary-base-rotation) - var(--digit-angle))) translateY(var(--rotary-number-radius)) rotate(calc(var(--digit-angle) - var(--rotary-base-rotation)))",
+                  }}
+                  aria-label={`回転ダイヤル ${digit}`}
+                  data-digit={digit}
+                  data-active={activeDigit() === digit ? "true" : undefined}
+                  disabled={queueFull()}
+                  aria-disabled={queueFull()}
+                  onPointerDown={() => dialDigit(digit)}
+                >
+                  {digit}
+                </button>
+              );
+            }}
           </For>
         </div>
       </div>
