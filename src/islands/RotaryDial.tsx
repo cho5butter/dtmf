@@ -187,7 +187,11 @@ export default function RotaryDial() {
             )}
           </For>
         </div>
-        {/* 固定の数字プレート（実機ではディスク外側のリングに数字が印刷） */}
+        {/*
+         * 数字プレート: 実機の文字盤に相当する固定レイヤー。
+         * 穴あきフィンガーディスク（rotary__wheel）の下に位置し、
+         * 穴を通して数字が覗き見える構造（黒電話 NTT 600形 相当）。
+         */}
         <div class="rotary__number-ring">
           <For each={rotaryDigits}>
             {(digit) => {
