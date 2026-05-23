@@ -96,3 +96,4 @@ coverage/
 test-results/
 playwright-report/
 .cursor/
+.claude/

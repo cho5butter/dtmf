@@ -1,12 +1,20 @@
 /** @jsxImportSource solid-js */
+import { createSignal, onMount } from "solid-js";
 import { useServices } from "../lib/state/context";
 import { appState, setSettings } from "../lib/state/store";
 
 export default function SettingsPanel() {
   const { engine } = useServices();
+  const [openByDefault, setOpenByDefault] = createSignal(false);
+
+  onMount(() => {
+    if (typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px)").matches) {
+      setOpenByDefault(true);
+    }
+  });
 
   return (
-    <details class="panel" data-testid="settings-panel">
+    <details class="panel" data-testid="settings-panel" open={openByDefault() || undefined}>
       <summary>CONFIG</summary>
       <div class="panel__body">
         <label class="range-field">

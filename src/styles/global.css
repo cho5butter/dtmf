@@ -612,12 +612,14 @@ button {
 
 .rotary__stop {
   position: absolute;
-  right: 10%;
-  top: 42%;
-  width: 18px;
-  height: 74px;
+  right: 8%;
+  bottom: 14%;
+  width: 12px;
+  height: 36px;
   border: var(--hair);
-  background: var(--signal);
+  background: var(--ink-50);
+  transform: rotate(-32deg);
+  transform-origin: center;
   z-index: 4;
 }
 

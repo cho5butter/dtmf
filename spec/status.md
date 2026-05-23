@@ -7,7 +7,7 @@
 ## 現在フェーズ
 
 **フェーズ**: 実装（Phase 3）完了 — レビュー待ち
-**ステータス**: Phase 3 実装後レビュー修正として、remote `main` 最新取り込み後に回転ダイヤル挙動、発音同期波形、デスクトップレイアウトの最終調整を実施。`bash scripts/quality-gate.sh` PASS（64 tests / size-limit 17.9 KB gzip）。
+**ステータス**: Phase 3 実装後レビュー修正として、remote `main` 最新取り込み後に回転ダイヤル挙動、発音同期波形、デスクトップレイアウトの最終調整を実施。さらに 2026-05-23 追加レビューで回転ダイヤルの指止め金（赤線）を抑制色＋小型化、PC幅で CONFIG/DETAILS パネルを自動展開するよう修正。`bash scripts/quality-gate.sh` PASS（64 tests / size-limit 17.99 KB gzip）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -52,8 +52,12 @@
 - PC レイアウトを表示部フル幅 + 下段2カラムに再構成し、モード切替下の大きな空白を解消
 - PC 幅の再生ボタンを5分割アイコンボタンにして縦積みを避け、各ボタンに `title` を追加
 - TDD: idle/DTMF 波形、PC レイアウト契約、回転角度のテストを追加/更新
-- 品質ゲート: `bash scripts/quality-gate.sh` PASS（64 tests / size-limit 17.9 KB gzip）
+- 品質ゲート: `bash scripts/quality-gate.sh` PASS（64 tests / size-limit 17.99 KB gzip）
 - Browser 目視確認: `http://127.0.0.1:4322/dtmf/` で PC レイアウト、回転戻り、戻り中の波形同期を確認
+- **2026-05-23 追加レビュー**: 回転ダイヤル `.rotary__stop` が `--signal`（赤）かつ大きすぎて数字「2」「3」と重なる問題を修正。`--ink-50` のグレー＋小型化＋傾けて文字盤右下に再配置
+- `SettingsPanel` / `DetailPanel` を PC 幅（>=1024px）でデフォルト展開するよう `onMount` で `matchMedia` 判定して `open` 属性を付与
+- `.gitignore` に `.claude/` を追加（preview server 用 `launch.json` 等を除外）
+- 品質ゲート再実行: 64 tests / 17.99 KB gzip PASS
 
 **次のアクション**:
 1. ユーザーが UI 修正内容を確認
