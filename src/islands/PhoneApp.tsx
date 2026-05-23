@@ -156,22 +156,17 @@ export default function PhoneApp() {
           </p>
         </Show>
 
-        <div class="col-left">
-          <NumberInput />
-          <PlaybackControls />
-          <Visualizer />
-          <SettingsPanel />
-          <DetailPanel />
-        </div>
-
-        <div class="col-right">
-          <ModeSwitcher />
-          <section class="dial-stage" aria-label="ダイヤル入力">
-            {appState.mode === "retro" && <DialPad />}
-            {appState.mode === "modern" && <ModernPad />}
-            {appState.mode === "rotary" && <RotaryDial />}
-          </section>
-        </div>
+        <NumberInput />
+        <ModeSwitcher />
+        <section class="dial-stage" aria-label="ダイヤル入力">
+          {appState.mode === "retro" && <DialPad />}
+          {appState.mode === "modern" && <ModernPad />}
+          {appState.mode === "rotary" && <RotaryDial />}
+        </section>
+        <PlaybackControls />
+        <Visualizer />
+        <SettingsPanel />
+        <DetailPanel />
       </div>
       <Toast />
       <div class="sr-only" aria-live="polite" id="playback-announcer">
