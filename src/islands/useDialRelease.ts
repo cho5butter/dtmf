@@ -2,7 +2,7 @@ import { createDialBuffer, playDigitSequence } from "../lib/dtmf/dialBuffer";
 import type { DtmfEngine } from "../lib/dtmf/engine";
 import type { DtmfKey } from "../lib/dtmf/frequencyMap";
 import { recordDialKey } from "../lib/state/dialActions";
-import { appState } from "../lib/state/store";
+import { appState, setPlayback } from "../lib/state/store";
 
 const rotaryBuffer = createDialBuffer();
 
@@ -20,10 +20,15 @@ export function usePadDialRelease(engine: DtmfEngine) {
     if (el.hasPointerCapture(e.pointerId)) {
       el.releasePointerCapture(e.pointerId);
     }
-    await playDigitSequence(engine, key, {
-      toneDurationMs: appState.settings.toneDurationMs,
-      gapMs: appState.settings.gapMs,
-    });
+    setPlayback("key_held");
+    try {
+      await playDigitSequence(engine, key, {
+        toneDurationMs: appState.settings.toneDurationMs,
+        gapMs: appState.settings.gapMs,
+      });
+    } finally {
+      if (appState.playback === "key_held") setPlayback("idle");
+    }
   };
 
   return { onKeyDown, onKeyUp };

@@ -66,6 +66,7 @@ export default function PlaybackControls() {
         onClick={() => void startAuto()}
         disabled={isRunning()}
         aria-label="番号をすべて再生"
+        title="番号をすべて再生"
       >
         <span class="t-btn__icon">▶</span>
         <span class="t-btn__label">PLAY</span>
@@ -77,6 +78,7 @@ export default function PlaybackControls() {
         onClick={stop}
         data-testid="stop-button"
         aria-label="再生を停止"
+        title="再生を停止"
       >
         <span class="t-btn__icon">■</span>
         <span class="t-btn__label">STOP</span>
@@ -93,6 +95,7 @@ export default function PlaybackControls() {
         }}
         disabled={!isRunning()}
         aria-label="一時停止"
+        title="一時停止"
       >
         <span class="t-btn__icon">⏸</span>
         <span class="t-btn__label">PAUSE</span>
@@ -108,6 +111,7 @@ export default function PlaybackControls() {
         }}
         disabled={!isPaused()}
         aria-label="再開"
+        title="再開"
       >
         <span class="t-btn__icon">▷</span>
         <span class="t-btn__label">RESUME</span>
@@ -121,6 +125,7 @@ export default function PlaybackControls() {
         }}
         data-testid="restart-button"
         aria-label="最初から再生"
+        title="最初から再生"
       >
         <span class="t-btn__icon">↻</span>
         <span class="t-btn__label">RESTART</span>

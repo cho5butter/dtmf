@@ -26,6 +26,10 @@ describe("rotaryAngle", () => {
     expect(returnAngle(stop)).toBe(0);
   });
 
+  test("finger stop always adds travel beyond the selected digit", () => {
+    expect(fingerStopAngle(digitToAngle("5"))).toBeGreaterThan(digitToAngle("5"));
+  });
+
   test("rotation keyframes split long travel into visible steps", () => {
     expect(rotationKeyframes(0, 370)).toEqual([0, 90, 180, 270, 360, 370]);
     expect(rotationKeyframes(370, 0)).toEqual([370, 280, 190, 100, 10, 0]);

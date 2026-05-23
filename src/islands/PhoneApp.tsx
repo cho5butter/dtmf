@@ -97,18 +97,18 @@ function handleKeyboard(e: KeyboardEvent) {
     heldKeys.add(key);
     void engine.ensureContext();
     recordDialKey(key);
-    setPlayback("key_held");
     return;
   }
 
   if (e.type === "keyup" && heldKeys.has(key)) {
     e.preventDefault();
     heldKeys.delete(key);
+    setPlayback("key_held");
     void playDigitSequence(engine, key, {
       toneDurationMs: appState.settings.toneDurationMs,
       gapMs: appState.settings.gapMs,
     }).finally(() => {
-      if (heldKeys.size === 0) setPlayback("idle");
+      if (heldKeys.size === 0 && appState.playback === "key_held") setPlayback("idle");
     });
   }
 }

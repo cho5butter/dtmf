@@ -4,6 +4,7 @@ import type { DtmfKey } from "../lib/dtmf/frequencyMap";
 import { isDtmfKey } from "../lib/dtmf/frequencyMap";
 import { digitToAngle, fingerStopAngle, returnAngle } from "../lib/dtmf/rotaryAngle";
 import { useServices } from "../lib/state/context";
+import { appState, setPlayback } from "../lib/state/store";
 import { usePadDialRelease, useRotaryDialRelease } from "./useDialRelease";
 
 const MAX_QUEUE = 20;
@@ -15,12 +16,14 @@ export default function RotaryDial() {
   const { startSession, recordDigit, releaseSession } = useRotaryDialRelease(engine);
   const [rotation, setRotation] = createSignal(0);
   const [queueFull, setQueueFull] = createSignal(false);
+  const [activeDigit, setActiveDigit] = createSignal<string | undefined>();
   let queue: string[] = [];
   let processing = false;
   let fingerDown = false;
   let activeFrame: number | undefined;
   let animationToken = 0;
   let disposed = false;
+  let releaseWaiters: Array<() => void> = [];
 
   const shouldReduceMotion = () =>
     typeof window !== "undefined" &&
@@ -56,6 +59,23 @@ export default function RotaryDial() {
     });
   };
 
+  const waitForFingerRelease = async () => {
+    if (!fingerDown) return;
+    await new Promise<void>((resolve) => {
+      releaseWaiters.push(resolve);
+    });
+  };
+
+  const releaseFinger = (e: PointerEvent & { currentTarget: HTMLElement }) => {
+    fingerDown = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    const waiters = releaseWaiters;
+    releaseWaiters = [];
+    for (const resolve of waiters) resolve();
+  };
+
   const processQueue = async () => {
     if (processing || queue.length === 0) return;
     processing = true;
@@ -66,13 +86,19 @@ export default function RotaryDial() {
     }
     const start = digitToAngle(digit === "0" ? "0" : digit);
     const stop = fingerStopAngle(start);
+    setActiveDigit(digit);
     await animateRotation(0, stop, WIND_MS);
     if (disposed) return;
     recordDigit(digit);
-    if (!fingerDown) {
-      void releaseSession();
+    await waitForFingerRelease();
+    if (disposed) return;
+    setPlayback("key_held");
+    try {
+      await Promise.all([releaseSession(), animateRotation(stop, returnAngle(stop), RETURN_MS)]);
+    } finally {
+      if (appState.playback === "key_held") setPlayback("idle");
     }
-    await animateRotation(stop, returnAngle(stop), RETURN_MS);
+    setActiveDigit(undefined);
     processing = false;
     setQueueFull(queue.length >= MAX_QUEUE);
     void processQueue();
@@ -97,6 +123,8 @@ export default function RotaryDial() {
     disposed = true;
     animationToken++;
     if (activeFrame) cancelAnimationFrame(activeFrame);
+    for (const resolve of releaseWaiters) resolve();
+    releaseWaiters = [];
     queue = [];
     engine.stopAll();
   });
@@ -109,18 +137,13 @@ export default function RotaryDial() {
     <div
       class="rotary"
       data-testid="rotary-dial"
-      onPointerDown={() => {
+      onPointerDown={(e) => {
         if (!fingerDown) startSession();
         fingerDown = true;
+        e.currentTarget.setPointerCapture(e.pointerId);
       }}
-      onPointerUp={() => {
-        fingerDown = false;
-        void releaseSession();
-      }}
-      onPointerCancel={() => {
-        fingerDown = false;
-        void releaseSession();
-      }}
+      onPointerUp={releaseFinger}
+      onPointerCancel={releaseFinger}
     >
       <p class="rotary__hint">黒電話のように戻る間に鳴ります</p>
       <div class="rotary__face">
@@ -149,6 +172,7 @@ export default function RotaryDial() {
                 }}
                 aria-label={`回転ダイヤル ${digit}`}
                 data-digit={digit}
+                data-active={activeDigit() === digit ? "true" : undefined}
                 disabled={queueFull()}
                 aria-disabled={queueFull()}
                 onPointerDown={() => dialDigit(digit)}
