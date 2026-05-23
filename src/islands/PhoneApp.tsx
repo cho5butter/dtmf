@@ -93,43 +93,31 @@ export default function PhoneApp() {
 
   return (
     <ServicesProvider value={{ engine, sequencer }}>
-      <div class={`phone-card p-5 ${themeClass()}`} data-testid="phone-app">
+      <div class={`dialer ${themeClass()}`} data-testid="phone-app">
         <Show when={appState.audio.contextSuspended}>
-          <div class="activate-overlay mb-5" role="status">
-            <p class="text-sm font-medium text-zinc-200">受話器を上げて音を有効にする</p>
-            <p class="hint-text mt-1">iOS などでは最初の操作が必要です</p>
-            <button type="button" class="btn-primary" onClick={activateAudio}>
+          <div class="audio-banner" role="status">
+            <p class="audio-banner__title">音を有効にしてください</p>
+            <p class="audio-banner__hint">スマホでは最初のタップが必要です</p>
+            <button type="button" class="btn btn--primary" onClick={activateAudio}>
               有効にする
             </button>
           </div>
         </Show>
         <Show when={!appState.audio.supported}>
-          <p class="mb-4 text-sm text-red-400" role="alert">
+          <p class="audio-error" role="alert">
             Web Audio API に対応していません
           </p>
         </Show>
 
-        <NumberInput />
         <ModeSwitcher />
 
-        <section class="mt-4" aria-label="ダイヤル入力">
-          {appState.mode === "retro" && (
-            <div class="retro-panel">
-              <DialPad />
-            </div>
-          )}
-          {appState.mode === "modern" && (
-            <div class="modern-panel">
-              <ModernPad />
-            </div>
-          )}
-          {appState.mode === "rotary" && (
-            <div class="rotary-panel">
-              <RotaryDial />
-            </div>
-          )}
+        <section class="dial-section" aria-label="ダイヤル入力">
+          {appState.mode === "retro" && <DialPad />}
+          {appState.mode === "modern" && <ModernPad />}
+          {appState.mode === "rotary" && <RotaryDial />}
         </section>
 
+        <NumberInput />
         <PlaybackControls />
         <Visualizer />
         <SettingsPanel />

@@ -1,6 +1,6 @@
 /** @jsxImportSource solid-js */
 import { For } from "solid-js";
-import { DTMF_KEYS, type DtmfKey } from "../lib/dtmf/frequencyMap";
+import { DTMF_KEYS } from "../lib/dtmf/frequencyMap";
 import { useServices } from "../lib/state/context";
 import { appState } from "../lib/state/store";
 import { usePadDialRelease } from "./useDialRelease";
@@ -10,13 +10,12 @@ export default function ModernPad() {
   const { onKeyDown, onKeyUp } = usePadDialRelease(engine);
 
   return (
-    <div class="grid grid-cols-3 gap-3" data-testid="modern-pad">
-      <p class="hint-text col-span-3 mb-1">押して数字をため、離すとトーンが鳴ります</p>
+    <div class="keypad keypad--modern" data-testid="modern-pad">
       <For each={DTMF_KEYS}>
         {(key) => (
           <button
             type="button"
-            class="dtmf-key"
+            class="keypad__key"
             aria-label={`ダイヤルキー ${key}`}
             data-key={key}
             data-active={

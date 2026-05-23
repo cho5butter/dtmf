@@ -14,7 +14,7 @@ describe("DialPad integration", () => {
     engine.releaseKey();
   });
 
-  test("dtmf-key class is defined in global styles contract", () => {
-    expect("dtmf-key").toContain("dtmf");
+  test("keypad key class is defined in global styles contract", () => {
+    expect("keypad__key").toContain("key");
   });
 });

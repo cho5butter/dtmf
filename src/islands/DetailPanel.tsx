@@ -14,7 +14,7 @@ export default function DetailPanel() {
   };
 
   return (
-    <details class="glass-panel mt-3 p-4" data-testid="detail-panel">
+    <details class="glass-panel" data-testid="detail-panel">
       <summary>周波数詳細</summary>
       <Show when={freqs()} fallback={<p class="hint-text mt-2">再生中のキーがありません</p>}>
         {(f) => (

@@ -26,6 +26,8 @@ interface ActiveTone {
 const DEFAULT_MAX_MS = 5000;
 const ABSOLUTE_MAX_MS = 10000;
 const CROSSFADE_MS = 5;
+/** この秒数以内の開始は「即時」とみなし、押下トーンの切り替えで前音を止める */
+const IMMEDIATE_THRESHOLD_SEC = 0.02;
 
 export interface CreateDtmfEngineDeps {
   createContext?: () => AudioContext | null;
@@ -37,6 +39,7 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
   let masterGain: GainNode | null = null;
   let analyser: AnalyserNode | null = null;
   let active: ActiveTone | null = null;
+  const scheduled: ActiveTone[] = [];
   let volume = 0.5;
 
   const getContext = () => {
@@ -56,20 +59,32 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
     return ctx;
   };
 
-  const stopActive = (when?: number) => {
-    if (!active || !ctx) return;
-    const stopAt = when ?? ctx.currentTime + CROSSFADE_MS / 1000;
-    for (const osc of active.oscillators) {
+  const disposeTone = (tone: ActiveTone, stopAt?: number) => {
+    if (!ctx) return;
+    const stopTime = stopAt ?? ctx.currentTime + CROSSFADE_MS / 1000;
+    for (const osc of tone.oscillators) {
       try {
-        osc.stop(stopAt);
+        osc.stop(stopTime);
       } catch {
         /* already stopped */
       }
       osc.disconnect();
     }
-    active.envelope.disconnect();
-    if (active.timeoutId) clearTimeout(active.timeoutId);
+    tone.envelope.disconnect();
+    if (tone.timeoutId) clearTimeout(tone.timeoutId);
+  };
+
+  const stopActive = (when?: number) => {
+    if (!active || !ctx) return;
+    disposeTone(active, when ?? ctx.currentTime + CROSSFADE_MS / 1000);
     active = null;
+  };
+
+  const stopScheduled = () => {
+    for (const tone of scheduled) {
+      disposeTone(tone);
+    }
+    scheduled.length = 0;
   };
 
   const scheduleTone = (key: DtmfKey, durationMs: number, when: number): Promise<void> => {
@@ -78,7 +93,10 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
       return Promise.reject(new Error("AudioContext unavailable"));
     }
 
-    stopActive(when);
+    const isImmediate = when <= audioCtx.currentTime + IMMEDIATE_THRESHOLD_SEC;
+    if (isImmediate) {
+      stopActive(when);
+    }
 
     const freqs = DTMF_FREQUENCY_MAP[key];
     const envelopeGain = audioCtx.createGain();
@@ -105,14 +123,25 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
       osc.stop(when + durationMs / 1000);
     }
 
-    active = { oscillators, envelope: envelopeGain };
+    const tone: ActiveTone = { oscillators, envelope: envelopeGain };
+    if (isImmediate) {
+      active = tone;
+    } else {
+      scheduled.push(tone);
+    }
 
     return new Promise((resolve, reject) => {
       const endSec = when + durationMs / 1000;
       const delayMs = Math.max(0, (endSec - audioCtx.currentTime) * 1000);
-      active!.timeoutId = setTimeout(() => {
+      tone.timeoutId = setTimeout(() => {
         try {
-          stopActive();
+          if (isImmediate && active === tone) {
+            active = null;
+          } else {
+            const idx = scheduled.indexOf(tone);
+            if (idx >= 0) scheduled.splice(idx, 1);
+          }
+          disposeTone(tone);
           resolve();
         } catch (err) {
           reject(err);
@@ -152,6 +181,7 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
 
     stopAll() {
       stopActive();
+      stopScheduled();
     },
 
     setVolume(v: number) {
