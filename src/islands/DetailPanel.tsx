@@ -1,9 +1,17 @@
 /** @jsxImportSource solid-js */
-import { Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import { DTMF_FREQUENCY_MAP } from "../lib/dtmf/frequencyMap";
 import { appState } from "../lib/state/store";
 
 export default function DetailPanel() {
+  const [openByDefault, setOpenByDefault] = createSignal(false);
+
+  onMount(() => {
+    if (typeof window !== "undefined" && window.matchMedia?.("(min-width: 1024px)").matches) {
+      setOpenByDefault(true);
+    }
+  });
+
   const currentChar = () =>
     appState.currentDigitIdx >= 0 ? appState.digits[appState.currentDigitIdx] : null;
 
@@ -14,7 +22,7 @@ export default function DetailPanel() {
   };
 
   return (
-    <details class="panel" data-testid="detail-panel">
+    <details class="panel" data-testid="detail-panel" open={openByDefault() || undefined}>
       <summary>DETAILS / Frequencies</summary>
       <div class="panel__body">
         <Show
