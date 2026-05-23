@@ -93,3 +93,6 @@ local.properties
 *.tmp
 *.bak
 coverage/
+test-results/
+playwright-report/
+.cursor/
