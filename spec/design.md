@@ -1216,4 +1216,79 @@ interface DtmfEngine {
 
 E2E の `rotary.spec.ts` は DOM 構造を維持（`[data-testid="rotary-dial"]`、`aria-label="回転ダイヤル 5"` 等）。
 
+## P3-10. Clear ボタン追加と入力フィールド二重入力修正（Phase 3 補正 / 2026-05-23）
+
+### 背景
+
+要件 F-019 / B-09 への対応。スマホ仮想キーボードで番号入力欄に数字を入れると同じ数字が 2 回入力されるバグを修正し、Clear ボタンを追加する。
+
+### B-09: 二重入力バグの原因と修正
+
+**原因**: `src/islands/PhoneApp.tsx` の `handleKeyboard` は document に `keydown` リスナとして登録されており、`<input>` フォーカス時にも DTMF キー処理を実行する。
+
+```
+スマホで "5" タップ
+  → keydown 発火 → handleKeyboard(target=<input>, key="5")
+    → recordDialKey("5") → raw = "5"
+  → 仮想キーボードが preventDefault を無視して文字を挿入 → input.value = "55"
+  → input イベント発火 → onInput → setInput("55")
+```
+
+**修正**: `handleKeyboard` の DTMF キー処理ブロックの先頭に `inFormField` ガードを追加する。Enter / Escape は既存挙動（input にフォーカスがあっても `runAutoPlay` / `stopAll` を発火）を維持する。
+
+```ts
+if (!isDtmfKey(key)) return;
+
+// 追加: input/textarea にフォーカスがある時は native input に委譲
+if (inFormField) return;
+
+if (e.type === "keydown" && !e.repeat) {
+  // ...既存処理...
+}
+```
+
+### F-019: Clear ボタン
+
+**配置**: 番号ディスプレイ (`<section class="display">`) のメタヘッダー（`display__meta`）右側に小さなテキストボタンとして配置。状態ラベル「INPUT/PLAYING」と桁数カウンタ「3/64」と並ぶ位置。
+
+**コンポーネント**: `src/islands/NumberInput.tsx` の `<header class="display__meta">` 内に追加。
+
+```tsx
+<button
+  type="button"
+  class="display__clear"
+  aria-label="入力をクリア"
+  data-testid="clear-button"
+  disabled={appState.display.length === 0 || appState.playback !== "idle"}
+  onClick={() => setInput("")}
+>
+  CLEAR
+</button>
+```
+
+**スタイル方針**: F-015 の Brutalist 系を踏襲。
+
+- `border: 2px solid var(--ink)` / `border-radius: 0`
+- 背景 `var(--paper)`、文字 `var(--ink)`、モノスペース小文字 11px
+- disabled 時は `opacity: 0.35; cursor: not-allowed`
+- 最小タップ領域 44×44（パディングで確保）
+
+### テスト追加
+
+1. **Unit (`tests/unit/numberInput.test.tsx` または既存に追加)**:
+   - Clear ボタン押下で `appState.display === ""` になる
+   - `display.length === 0` で disabled
+   - `playback !== "idle"` で disabled
+2. **Unit (`tests/unit/phoneApp.keyboard.test.ts` 想定 / 既存があれば追加)**:
+   - `inFormField=true` で DTMF キー keydown を発火しても `recordDialKey` が呼ばれない（= `appState.raw` が変化しない）
+   - `inFormField=false` では既存通り `recordDialKey` が呼ばれる
+   - Enter / Escape は `inFormField` の有無に関わらず処理される
+3. **E2E (任意 / 既存があれば追加)**:
+   - Clear ボタン押下で `[data-testid="digit-preview"]` が placeholder に戻る
+
+### 既存への影響
+
+- DTMF エンジン、状態管理、回転ダイヤル、自動ダイヤルなどの挙動には影響しない
+- `data-testid` は追加のみ（`clear-button`）。既存テストは破壊しない
+
 

@@ -1,12 +1,16 @@
 /** @jsxImportSource solid-js */
 import { For, Show } from "solid-js";
-import { appState, setInput } from "../lib/state/store";
+import { appState, type Playback, setInput } from "../lib/state/store";
 
 const MAX_DIGITS = 64;
 const PLACEHOLDER = "— — — — —";
 
 export function historyItemLabel(index: number): string {
   return `HISTORY ${String(index + 1).padStart(2, "0")}`;
+}
+
+export function isClearDisabled(display: string, playback: Playback): boolean {
+  return display.length === 0 || playback !== "idle";
 }
 
 function statusOf(playback: string): { label: string; state: "input" | "playing" | "done" } {
@@ -48,6 +52,16 @@ export default function NumberInput() {
         <span class="display__status" data-state={status().state}>
           ● {status().label}
         </span>
+        <button
+          type="button"
+          class="display__clear"
+          aria-label="入力をクリア"
+          data-testid="clear-button"
+          disabled={isClearDisabled(appState.display, appState.playback)}
+          onClick={() => setInput("")}
+        >
+          CLEAR
+        </button>
         <span class="display__count">
           {appState.digits.length} / {MAX_DIGITS}
         </span>

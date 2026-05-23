@@ -458,3 +458,32 @@ Phase 2 で「ミニマル統一デザイン（F-011〜F-013）」を導入し�
 - ダークモードのトグル UI 提供（OS 設定追従のみ、明示的なトグルは作らない）
 - PWA 化・オフライン強キャッシュ
 
+## 追加要件（Phase 3 補正 / 2026-05-23）
+
+> 2026-05-23: ユーザー報告「スマホから Input に数字を入力すると同じ数字が二回入力される」「Clear ボタンも付けてほしい」を受けた追加要件。実装はバグ修正＋小機能追加の範囲。
+
+### F-019: 入力クリアボタン
+
+**説明**: 番号ディスプレイ近傍に「Clear」ボタンを追加し、ワンタップで入力欄を空にできるようにする。再生中（`auto_running` / `auto_paused` / `key_held`）は誤操作防止のため非活性。
+**優先度**: 中
+**対応ユーザーストーリー**: US-003
+
+**受け入れ基準:**
+- [x] 番号ディスプレイの近傍（モバイル・PC とも視認可能な位置）に「Clear」ボタンを配置
+- [x] 押下で `setInput("")` 相当を実行し、`raw` / `display` / `digits` / `hadInternationalPrefix` がすべて初期化される
+- [x] `appState.display.length === 0` の場合は disabled（押せない）
+- [x] `appState.playback !== "idle"` の場合も disabled
+- [x] `aria-label="入力をクリア"`、`data-testid="clear-button"` を付与
+- [x] 最小タップ領域 44×44 CSS px（NFR-005）
+
+### バグ修正要件（Phase 3 補正）
+
+| ID | バグ概要 | 関連要件 | 優先度 |
+|----|---------|---------|--------|
+| B-09 | スマホ仮想キーボードで `<input type="tel">` に数字を入力すると、`PhoneApp.tsx` の document-level `handleKeyboard` が DTMF キーとして `recordDialKey()` を実行し、さらに仮想キーボードが `preventDefault` を無視して文字を挿入するため、`raw` に同じ数字が二重に追加される | F-002, F-017 | 高 |
+
+**受け入れ基準:**
+- [x] B-09: `handleKeyboard` 内で `inFormField`（フォーカスが `<input>` / `<textarea>` 上）かつキーが DTMF キーの場合は、document-level の `recordDialKey` / `playDigitSequence` を実行せず、ネイティブ input イベントに委譲する。Enter / Escape はこれまで通り処理する
+- [x] B-09: モバイル仮想キーボードからの数字入力で、最終的な `appState.raw` が入力された桁数と一致すること（unit test で `handleKeyboard` 経由のシミュレーションを追加）
+- [x] B-09: PC 物理キーボードでの数字キー押下時の挙動（入力欄外で押下 → 番号欄に追記、`onKeyUp` で音再生）は維持される
+

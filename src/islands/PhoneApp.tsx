@@ -67,7 +67,7 @@ function stopAll() {
   heldKeys.clear();
 }
 
-function handleKeyboard(e: KeyboardEvent) {
+export function handleKeyboard(e: KeyboardEvent) {
   const key = e.key;
   const target = e.target as HTMLElement | null;
   const inFormField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
@@ -91,6 +91,10 @@ function handleKeyboard(e: KeyboardEvent) {
   }
 
   if (!isDtmfKey(key)) return;
+
+  // B-09: モバイル仮想キーボードでの二重入力防止。input/textarea にフォーカスがある時は
+  // document レベルの DTMF 処理を行わず、ネイティブ input イベントに委譲する
+  if (inFormField) return;
 
   if (e.type === "keydown" && !e.repeat) {
     e.preventDefault();
