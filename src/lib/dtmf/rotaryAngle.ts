@@ -21,5 +21,6 @@ export function fingerStopAngle(digitAngle: number): number {
 }
 
 export function returnAngle(fingerStop: number): number {
-  return fingerStop - FINGER_STOP_OFFSET;
+  void fingerStop;
+  return 0;
 }

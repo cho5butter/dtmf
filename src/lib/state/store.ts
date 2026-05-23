@@ -1,8 +1,10 @@
 import { createStore } from "solid-js/store";
 import { normalizePhoneNumber } from "../input/normalizer";
 import {
+  loadDialHistory,
   loadPersistedState,
   type PersistedSettings,
+  rememberDialHistory,
   saveMode,
   saveSettings,
   type UiMode,
@@ -30,6 +32,7 @@ export interface AppState {
     supported: boolean;
     contextSuspended: boolean;
   };
+  history: string[];
   toast: ToastState | null;
 }
 
@@ -48,6 +51,7 @@ export const [appState, setAppState] = createStore<AppState>({
     supported: true,
     contextSuspended: false,
   },
+  history: loadDialHistory(),
   toast: null,
 });
 
@@ -84,6 +88,11 @@ export function setPlayback(playback: Playback) {
 
 export function setCurrentDigitIdx(idx: number) {
   setAppState("currentDigitIdx", idx);
+}
+
+export function recordPlaybackHistory(value = appState.display) {
+  const next = rememberDialHistory(value);
+  setAppState("history", next);
 }
 
 export function pushToast(toast: ToastState) {

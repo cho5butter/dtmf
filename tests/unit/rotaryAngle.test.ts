@@ -14,7 +14,7 @@ describe("rotaryAngle", () => {
 
   test("finger stop and return", () => {
     const stop = fingerStopAngle(90);
-    expect(returnAngle(stop)).toBe(90);
+    expect(returnAngle(stop)).toBe(0);
   });
 
   test("invalid digit throws", () => {

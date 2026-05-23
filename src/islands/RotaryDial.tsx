@@ -18,6 +18,7 @@ export default function RotaryDial() {
   let processing = false;
   let fingerDown = false;
   let returnTimer: ReturnType<typeof setTimeout> | undefined;
+  let resetTimer: ReturnType<typeof setTimeout> | undefined;
 
   const processQueue = async () => {
     if (processing || queue.length === 0) return;
@@ -36,9 +37,11 @@ export default function RotaryDial() {
       if (!fingerDown) {
         void releaseSession();
       }
-      processing = false;
-      setQueueFull(queue.length >= MAX_QUEUE);
-      void processQueue();
+      resetTimer = setTimeout(() => {
+        processing = false;
+        setQueueFull(queue.length >= MAX_QUEUE);
+        void processQueue();
+      }, RETURN_MS);
     }, RETURN_MS);
   };
 
@@ -59,6 +62,7 @@ export default function RotaryDial() {
 
   onCleanup(() => {
     if (returnTimer) clearTimeout(returnTimer);
+    if (resetTimer) clearTimeout(resetTimer);
     queue = [];
     engine.stopAll();
   });

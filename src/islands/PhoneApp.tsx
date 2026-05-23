@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import { onMount, Show } from "solid-js";
+import { onCleanup, onMount, Show } from "solid-js";
 import { playDigitSequence } from "../lib/dtmf/dialBuffer";
 import { createDtmfEngine } from "../lib/dtmf/engine";
 import { isDtmfKey } from "../lib/dtmf/frequencyMap";
@@ -9,6 +9,7 @@ import { recordDialKey } from "../lib/state/dialActions";
 import {
   appState,
   pushToast,
+  recordPlaybackHistory,
   resetPlayback,
   setAudioSupported,
   setContextSuspended,
@@ -17,7 +18,6 @@ import {
 } from "../lib/state/store";
 import DetailPanel from "./DetailPanel";
 import DialPad from "./DialPad";
-import ModernPad from "./ModernPad";
 import ModeSwitcher from "./ModeSwitcher";
 import NumberInput from "./NumberInput";
 import PlaybackControls from "./PlaybackControls";
@@ -42,6 +42,7 @@ async function runAutoPlay() {
   autoController = ac;
   setPlayback("auto_running");
   setCurrentDigitIdx(-1);
+  recordPlaybackHistory();
   try {
     await engine.ensureContext();
     await sequencer.start(appState.digits, {
@@ -123,11 +124,12 @@ export default function PhoneApp() {
     engine.setVolume(appState.settings.volume ** 2);
     document.addEventListener("keydown", handleKeyboard);
     document.addEventListener("keyup", handleKeyboard);
-    return () => {
-      document.removeEventListener("keydown", handleKeyboard);
-      document.removeEventListener("keyup", handleKeyboard);
-      engine.stopAll();
-    };
+  });
+
+  onCleanup(() => {
+    document.removeEventListener("keydown", handleKeyboard);
+    document.removeEventListener("keyup", handleKeyboard);
+    engine.stopAll();
   });
 
   const activateAudio = () => {
@@ -160,7 +162,6 @@ export default function PhoneApp() {
         <ModeSwitcher />
         <section class="dial-stage" aria-label="ダイヤル入力">
           {appState.mode === "retro" && <DialPad />}
-          {appState.mode === "modern" && <ModernPad />}
           {appState.mode === "rotary" && <RotaryDial />}
         </section>
         <PlaybackControls />
