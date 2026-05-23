@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3）完了 — レビュー待ち（実機相当ダイヤル補正 PR）
-**ステータス**: Phase 3 レビュー修正の継続として、回転ダイヤルを NTT 600/601 形相当の実機ジオメトリ・挙動（5時方向の指止め、`base - digit_angle` 表示、等速戻り、戻り中パルス音、指挿入インジケータ）に揃え直し。`main` 取り込み済みの PC パネル自動展開・波形同期等と統合。`bash scripts/quality-gate.sh` PASS（67 tests / size-limit 18.39 KB gzip）。
+**フェーズ**: 実装（Phase 3 補正 / 計画 P3-I 進行中）
+**ステータス**: ユーザー報告「スマホで Input に数字を入力すると同じ数字が二回入力される」「Clear ボタンが欲しい」を受けて、要件 F-019 / B-09 と設計 P3-10 / 計画 P3-I を `spec/` に追加し承認済み。TDD で実装中。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -48,25 +48,34 @@
 - `SettingsPanel` / `DetailPanel` を PC 幅（>=1024px）でデフォルト展開
 - `.gitignore` に `.claude/` を追加
 
-*実機相当ダイヤル補正（本 PR / 2026-05-23）*:
+*実機相当ダイヤル補正（PR / 2026-05-23）*:
 - ユーザー指示「実物のダイヤル電話を解析してもっと現実に近づけて」
 - `spec/requirements.md` F-003 改訂、`spec/design.md` P3-9 追加
 - `rotaryAngle.ts`: 半ステップ 18°、`pulseCount` / `returnDurationMs`
 - `engine.ts`: `playRotaryPulses`（戻り中クリック音）
 - `RotaryDial.tsx`: 等速戻り、DTMF は戻り完了後、指穴 `data-active`
 - `global.css`: 5時方向指止め、`base - digit_angle` 数字配置、指穴ハイライト
-- 品質ゲート PASS（67 tests / 18.39 KB gzip）
 
 *黒電話の物理構造再現（2026-05-23 追補）*:
 - ユーザー指示「数字の上にダイヤルがくるはず。黒電話を参考にして」
 - `global.css`: 数字とフィンガーホイール穴を同一半径に統一、ホイールを透明縁取りディスクへ、z-index を「数字＝下層 / ホイール＝上層」に逆転
 - `RotaryDial.tsx`: 前回試行した数字リング回転を撤回（数字は完全固定）
-- 静止時は穴の中央に各数字が見え、回転時はホイールのみ回って数字が穴で「選ばれる」表現
-- 品質ゲート PASS（67 tests / 18.39 KB gzip）
+
+*Clear ボタン追加 / 二重入力バグ修正（本 PR / 2026-05-23）*:
+- ユーザー報告「スマホで Input に数字入力すると二回入力される」「Clear ボタンが欲しい」
+- `spec/requirements.md` に F-019（Clear ボタン）/ B-09（二重入力バグ）を追加
+- `spec/design.md` に P3-10 セクションを追加
+- `spec/plan.md` に 計画 P3-I（TDD 手順）を追加
+- `PhoneApp.tsx`: `handleKeyboard` を export 化し、`inFormField` ガードを DTMF キー処理直前に追加
+- `NumberInput.tsx`: `isClearDisabled(display, playback)` ヘルパーを追加し、`display__meta` に Clear ボタンを実装
+- `global.css`: `.display__clear` の Brutalist スタイル（2px solid var(--ink) / hover/focus 反転 / 44×44 最小タップ / disabled）
+- 新規テスト 8 件（`handleKeyboard` の input/textarea ガード 3 件、Clear ボタンの境界 + DOM contract 5 件）
+- `bash scripts/quality-gate.sh` PASS（77 tests / 18.81 KB gzip）
 
 **次のアクション**:
-1. PR レビュー・マージ後、GitHub Pages で実機相当ダイヤルの挙動を再確認
-2. ユーザーから追加フィードバックがあれば対応
+1. ブランチ `claude/lucid-sagan-KsSyS` を push し draft PR を作成
+2. PR レビュー → マージ後、GitHub Pages 上で実機モバイルで Clear ボタンと二重入力解消を最終確認
+3. ユーザーから追加フィードバックがあれば対応
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる

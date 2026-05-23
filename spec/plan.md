@@ -762,6 +762,45 @@ graph TD
 
 ---
 
+## 計画 P3-I: Clear ボタン追加と入力フィールド二重入力修正（B-09 / F-019）
+
+**ステータス**: 完了
+
+**目的**: 要件 F-019（Clear ボタン）と B-09（スマホ仮想キーボードでの二重入力バグ）を解消する。
+
+**前提条件**: `spec/design.md` の P3-10 セクションを参照
+
+**タスク**:
+
+- [x] **テスト先行（RED）**
+  - [x] `tests/component/keyboard.test.tsx` に `<input>` / `<textarea>` フォーカス時の DTMF keydown が `appState.raw` を変化させないことを検証するテストを追加
+  - [x] `tests/component/NumberInput.test.tsx` に Clear ボタンのテストを追加: 押下で state がリセット、`isClearDisabled` の境界条件、ソーステキストでの DOM contract
+  - [x] `bun test` で新規テストが RED になることを確認（`handleKeyboard` / `isClearDisabled` の export 不在による失敗）
+- [x] **実装（GREEN）**
+  - [x] `src/islands/PhoneApp.tsx` の `handleKeyboard` を `export` し、DTMF キー処理ブロック直前に `if (inFormField) return;` を追加
+  - [x] `src/islands/NumberInput.tsx` に `isClearDisabled(display, playback)` を追加し、`display__meta` ヘッダーに Clear ボタンを実装（`data-testid="clear-button"`、`aria-label="入力をクリア"`、`onClick={() => setInput("")}`、`disabled={isClearDisabled(...)}`)
+  - [x] `src/styles/global.css` に `.display__clear` のスタイル（Brutalist トーン: 2px solid var(--ink) / モノスペース 11px / hover/focus 反転 / disabled / 44×44 最小タップ）を追加
+- [x] **REFACTOR / 確認**
+  - [x] `bash scripts/quality-gate.sh` PASS（77 tests / 18.81 KB gzip）
+  - [x] 既存 E2E（`tests/e2e/`）が破壊されていないこと（unit/component スイートは全 pass）
+- [x] **ドキュメント更新**
+  - [x] 本計画のチェックボックスを `[x]` に更新
+  - [x] `spec/requirements.md` の F-019 / B-09 の受け入れ基準を `[x]` に更新
+  - [x] `spec/status.md` の「直近の状況」「次のアクション」を更新
+
+**完了条件**:
+- [x] スマホ実機相当環境（unit テストで `handleKeyboard` を直接シミュレーション）で、Clear ボタンが意図通り動作し、入力欄が二重入力にならないことをテストで担保
+- [x] `bash scripts/quality-gate.sh` PASS
+- [x] 受け入れ基準の全項目 PASS
+
+**影響範囲**:
+- `src/islands/PhoneApp.tsx` / `src/islands/NumberInput.tsx` / `src/styles/global.css`
+- 新規テスト 2 本（または既存テストへの追加）
+
+**テスト方針**: TDD（テスト先行）。`bun test` の unit テストで挙動を担保し、品質ゲートで全体回帰を確認。
+
+---
+
 ## 最終計画（固定・必須）: 脆弱性レビュー
 
 **ステータス**: 完了

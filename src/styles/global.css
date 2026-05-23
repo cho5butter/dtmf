@@ -265,6 +265,38 @@ button {
   color: var(--ink);
 }
 
+.display__clear {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: 6px 12px;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.display__clear:hover:not(:disabled),
+.display__clear:focus-visible:not(:disabled) {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.display__clear:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.display__clear:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 @keyframes led-blink {
   0%,
   50% {
