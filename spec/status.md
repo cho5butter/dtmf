@@ -27,7 +27,7 @@
 | 要件定義 | 2026-05-20 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/requirements.md` 完成。ユーザー指示「設計を進めて」で承認 |
 | 設計 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/design.md` 初稿作成。PR #2 にてユーザー指示「承認します」で承認 |
 | 計画 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/plan.md` 初稿作成（計画1〜15 + 最終計画「脆弱性レビュー」）。PR #3 にてユーザー指示「承認します」で承認 |
-| 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS |
+| 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS。その後 PR #21 等の CI 修正・Dependabot 経由の依存更新（astro 6.3.6 / @astrojs/solid-js 6.0.1 / solid-js 1.9.13 / typescript 6.0.3 / tailwindcss 4.3.0 / @tailwindcss/vite 4.3.0 / @playwright/test 1.60.0）を経て、GitHub Pages の Source を `GitHub Actions` に変更・`oven-sh/setup-bun@v2` を 1.3.11 固定・`pages.yml` に失敗時アノテーション追加（PR #23）し本番デプロイ成功 |
 | 要件定義(v2) | 2026-05-23 | — | Claude Code (Opus 4.7) | UI/UX 監査でリリース版に致命的バグ＋UX 不足を発見、`requirements.md` に F-011〜F-013（システム / Bauhaus テイストのミニマル刷新）と B1〜B8（バグ修正）を追記 |
 
 ## 直近の状況
@@ -37,6 +37,7 @@
 - 致命バグ B1（キーパッド配列違反）/ B2（リスナ未解除）/ B3/B4（手動キー押下が入力欄に反映されない）/ B5（ポインタ押下時にビジュアライザ非稼働）/ B6（View Transitions 未実装）/ B7（iOS AudioContext 不確実）/ B8（pause で未来トーンが残る）を確認
 - 配色/レイアウト/タイポ/モード差分の UX 課題を洗い出し
 - `spec/requirements.md` に「v2 リビジョン: UI 刷新（システム/Bauhaus 風）+ バグ修正」を追記
+- main を取り込み（v1 のデプロイ復旧履歴はフェーズ履歴の実装行へ統合）
 
 **次のアクション**:
 1. `spec/requirements.md` v2 追記分のユーザー承認を得る
