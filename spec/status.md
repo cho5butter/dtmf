@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / 計画 P3-I 進行中）
-**ステータス**: ユーザー報告「スマホで Input に数字を入力すると同じ数字が二回入力される」「Clear ボタンが欲しい」を受けて、要件 F-019 / B-09 と設計 P3-10 / 計画 P3-I を `spec/` に追加し承認済み。TDD で実装中。
+**フェーズ**: 実装（Phase 3 補正 / 計画 P3-J 進行中）
+**ステータス**: ユーザー報告「Clear ボタンがダサい」「回転で数字が均等配置されるのはおかしい・ストッパーは 0 と 1 の間」を受けて、設計 P3-11 を `spec/` に追加。回転ダイヤルを 30° 刻み・90° 隙間モデル（NTT 600 形完全準拠）に再校正し、Clear ボタンを `display__meta` 行の活字タイポに揃えた。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -61,20 +61,24 @@
 - `global.css`: 数字とフィンガーホイール穴を同一半径に統一、ホイールを透明縁取りディスクへ、z-index を「数字＝下層 / ホイール＝上層」に逆転
 - `RotaryDial.tsx`: 前回試行した数字リング回転を撤回（数字は完全固定）
 
-*Clear ボタン追加 / 二重入力バグ修正（本 PR / 2026-05-23）*:
+*Clear ボタン追加 / 二重入力バグ修正（PR #36 / 2026-05-23 マージ済）*:
 - ユーザー報告「スマホで Input に数字入力すると二回入力される」「Clear ボタンが欲しい」
 - `spec/requirements.md` に F-019（Clear ボタン）/ B-09（二重入力バグ）を追加
-- `spec/design.md` に P3-10 セクションを追加
-- `spec/plan.md` に 計画 P3-I（TDD 手順）を追加
-- `PhoneApp.tsx`: `handleKeyboard` を export 化し、`inFormField` ガードを DTMF キー処理直前に追加
-- `NumberInput.tsx`: `isClearDisabled(display, playback)` ヘルパーを追加し、`display__meta` に Clear ボタンを実装
-- `global.css`: `.display__clear` の Brutalist スタイル（2px solid var(--ink) / hover/focus 反転 / 44×44 最小タップ / disabled）
-- 新規テスト 8 件（`handleKeyboard` の input/textarea ガード 3 件、Clear ボタンの境界 + DOM contract 5 件）
+- `spec/design.md` に P3-10 セクションを追加、`spec/plan.md` に計画 P3-I を追加
+- `PhoneApp.tsx` / `NumberInput.tsx` 修正、新規テスト 8 件
+
+*回転ダイヤル 30° 刻み再校正 + Clear ボタン体裁刷新（本 PR / 2026-05-23）*:
+- ユーザー指摘「回転で数字が均等配置されるのはおかしい」「ストッパーは 0 と 1 の間」「Clear ボタンがダサい」
+- `spec/requirements.md` F-003 を改訂（30° 刻み・90° 隙間・止め金は 0/1 間「1」寄り）
+- `spec/design.md` に P3-11 セクションを追加（P3-9 へ改訂注記）
+- `rotaryAngle.ts`: `DEGREES_PER_STEP` 36→30、`FINGER_STOP_OFFSET` 18→0
+- `global.css`: `--rotary-base-rotation` 132→150（=stop_angle）、コメント更新。Clear ボタンを 11px mono + signal 下線スタイルに刷新
+- `tests/unit/rotaryAngle.test.ts` を新ジオメトリに合わせて改訂・拡充（隙間 90° の検証追加）
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.81 KB gzip）
 
 **次のアクション**:
-1. ブランチ `claude/lucid-sagan-KsSyS` を push し draft PR を作成
-2. PR レビュー → マージ後、GitHub Pages 上で実機モバイルで Clear ボタンと二重入力解消を最終確認
+1. 本ブランチを push し draft PR を作成
+2. PR レビュー → マージ後、GitHub Pages 上で回転ダイヤルの数字配置とストッパー位置を実機確認
 3. ユーザーから追加フィードバックがあれば対応
 
 **ブロッカー・懸念事項**:
