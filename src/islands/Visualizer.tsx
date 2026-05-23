@@ -8,6 +8,12 @@ export default function Visualizer() {
   let canvas: HTMLCanvasElement | undefined;
   let rafId = 0;
 
+  const readVar = (name: string, fallback: string): string => {
+    if (typeof window === "undefined" || !canvas) return fallback;
+    const v = getComputedStyle(canvas).getPropertyValue(name).trim();
+    return v || fallback;
+  };
+
   const draw = () => {
     const analyser = engine.getAnalyser();
     if (!canvas || !analyser) return;
@@ -16,13 +22,15 @@ export default function Visualizer() {
     const buffer = new Uint8Array(analyser.fftSize);
     analyser.getByteTimeDomainData(buffer);
     const { width, height } = canvas;
-    ctx.clearRect(0, 0, width, height);
 
-    const gradient = ctx.createLinearGradient(0, 0, width, 0);
-    gradient.addColorStop(0, "#22d3ee");
-    gradient.addColorStop(0.5, "#818cf8");
-    gradient.addColorStop(1, "#e879f9");
+    const paper = readVar("--paper", "#F2EFE6");
+    const signal = readVar("--signal", "#FF3B30");
 
+    ctx.fillStyle = paper;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.strokeStyle = signal;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     const sliceWidth = width / buffer.length;
     let x = 0;
@@ -33,12 +41,7 @@ export default function Visualizer() {
       else ctx.lineTo(x, y);
       x += sliceWidth;
     }
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = 2;
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = "#22d3ee";
     ctx.stroke();
-    ctx.shadowBlur = 0;
   };
 
   const loop = () => {
@@ -70,7 +73,7 @@ export default function Visualizer() {
   return (
     <canvas
       id="dtmf-visualizer"
-      class="mt-4 h-20 w-full rounded-xl border border-white/10 bg-black/40"
+      class="visualizer"
       width="400"
       height="80"
       aria-label="音声波形ビジュアライザ"

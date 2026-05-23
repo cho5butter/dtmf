@@ -796,9 +796,340 @@ GitHub Pages はカスタム HTTP ヘッダーを設定できないため、CSP�
 
 ---
 
-## ユーザー検討待ち項目
+# 追加設計（Phase 3: デザイン完全再構築）
 
-設計の承認前に確認したい点:
+> 2026-05-23: Phase 3 要件定義（F-014〜F-018 / NFR-012〜014）に対応する設計を追記。
+> 機能層（DTMF エンジン・状態管理・正規化・入力モード）は **一切変更しない**。本セクションが扱うのは「ビジュアル層・レイアウト層・コンポーネント DOM 構造」のみ。
+
+## P3-1. デザイントークン（CSS Custom Properties / 単一の真実源）
+
+`src/styles/global.css` の `:root` に以下を集約。Tailwind / 個別コンポーネントからの生のカラー指定は禁止（NFR-014）。
+
+```css
+:root {
+  /* Color — 3-color rule (NFR-012) */
+  --ink:      #0A0A0A;   /* 文字・枠線 */
+  --paper:    #F2EFE6;   /* 背景 */
+  --signal:   #FF3B30;   /* アクセント・再生中 */
+  --ink-50:   #6B6B68;   /* 補助テキストのみ */
+
+  /* Typography */
+  --font-sans: "Helvetica Neue", "Inter", "Arial", "Hiragino Kaku Gothic ProN", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Menlo", "Consolas", ui-monospace, monospace;
+
+  /* Spacing scale (4px base) */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-6: 24px; --s-8: 32px; --s-12: 48px; --s-16: 64px;
+
+  /* Border / Shadow */
+  --hair:        2px solid var(--ink);
+  --shadow-hard: 4px 4px 0 var(--ink);  /* オフセットのみ、blur=0 */
+
+  /* Layout */
+  --col-max:     1200px;
+  --bp-desk:     1024px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #F2EFE6; --paper: #0A0A0A; --ink-50: #9a9a96; }
+}
+```
+
+**禁止事項（NFR-012 達成のため、CSS レビューでチェック）:**
+- `linear-gradient` / `radial-gradient` / `conic-gradient`
+- `border-radius` が 0 / 50% 以外
+- `box-shadow` で blur > 0（`0 X X rgb(0 0 0 / Y)` 形式は全削除）
+- `backdrop-filter: blur` / `rgb(... / 0.0X)` のガラスエフェクト
+- `--accent: #60a5fa` / `theme-retro` / `theme-modern` の独自配色
+
+## P3-2. レイアウトグリッド（F-014）
+
+### スマホ（< 1024px）— 縦 1 カラム
+
+```
+┌──────────────────────────┐
+│ BRAND  DTMF / WEB DIALER │  brand-row  (h: 56px, sticky-top)
+├──────────────────────────┤
+│ display [ — — — — — ]    │  display    (h: ≥96px, w: 100%)
+│ INPUT          0 / 64    │
+├──────────────────────────┤
+│ mode-pick: [Pad][Mod][Rot]│  mode-row
+├──────────────────────────┤
+│                          │
+│     dial-stage (主役)    │  dial-stage (短辺の 70-85%)
+│                          │
+├──────────────────────────┤
+│ ▶ PLAY   ■   ⏸    ↻     │  transport (sticky-bottom + safe-area)
+├──────────────────────────┤
+│ ▾ CONFIG / DETAILS       │  config
+└──────────────────────────┘
+```
+
+CSS:
+```css
+.stage { display: grid; grid-template-rows: auto auto auto 1fr auto auto; min-height: 100dvh; }
+.transport { position: sticky; bottom: 0; padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+```
+
+### PC（≥ 1024px）— 2 カラム CSS Grid
+
+```
+┌────────────────────────────────────────────────────┐
+│ BRAND  DTMF / WEB DIALER / 2026 / OPUS 4.7         │  brand-row (full width, h: 80px)
+├──────────────────────────┬─────────────────────────┤
+│ DISPLAY (大)             │ MODE-PICK               │
+│ [ — — — — — — — ]       │ [PAD] [MOD] [ROT]       │
+│ INPUT     0 / 64         │                         │
+│                          │ DIAL-STAGE              │
+│ TRANSPORT                │  (key size 72-88px)     │
+│ ▶ PLAY  ■  ⏸  ↻         │                         │
+│                          │                         │
+│ CONFIG                   │                         │
+│  - tone-ms               │                         │
+│  - gap-ms                │                         │
+│  - volume                │                         │
+│                          │                         │
+│ DETAILS (freq)           │                         │
+└──────────────────────────┴─────────────────────────┘
+   col-left  (44%)            col-right (56%)
+```
+
+CSS:
+```css
+@media (min-width: 1024px) {
+  .stage { grid-template: "brand brand" auto "left right" 1fr / 44% 56%; max-width: var(--col-max); margin-inline: auto; }
+  .transport { position: static; } /* PC では sticky 不要 */
+}
+```
+
+### タブレット（768-1023px）
+
+スマホ縦レイアウトを `max-width: 640px` で中央寄せ。中間レイアウトは作らない。
+
+### 既存クラスの廃止
+
+| 廃止 | 置換 |
+|------|------|
+| `.app-shell` | `body` 自体に背景・色のみ |
+| `.page` | `.stage` (CSS Grid) |
+| `.page-header` | `.brand` |
+| `.dialer` | コンテナ廃止、要素を `.stage` 直下へ |
+| `.dial-section` | `.dial-stage` (no card-in-card) |
+| `.number-field` | `.display` (output 主体) |
+| `.glass-panel` | `.panel` (2px border, no glass) |
+| `.theme-retro/modern/rotary` | 配色差を撤廃。**形状差**のみで識別 |
+
+## P3-3. コンポーネント仕様
+
+### Display（番号ディスプレイ・F-016）
+
+DOM 構造（テスト互換のため `data-testid="phone-input"` と `data-testid="digit-preview"` 両方を維持）:
+
+```html
+<section class="display" aria-label="番号ディスプレイ">
+  <header class="display__meta">
+    <span class="display__status">INPUT</span>   <!-- INPUT|PLAYING|DONE -->
+    <span class="display__count">0 / 64</span>
+  </header>
+  <output class="display__screen" data-testid="digit-preview">
+    <!-- empty -->
+    <span class="display__placeholder">— — — — —</span>
+    <!-- or filled -->
+    <span class="display__digit" data-state="done">1</span>
+    <span class="display__digit" data-state="now">2</span>
+    <span class="display__digit" data-state="next">3</span>
+  </output>
+  <input
+    type="tel" inputmode="tel" autocomplete="tel"
+    class="display__hidden-input"
+    data-testid="phone-input"
+    aria-label="電話番号入力"
+  />
+</section>
+```
+
+- `output` がクリック・タップを受け、隠し input に `focus()` を transfer
+- 隠し input は `position: absolute; opacity: 0; pointer-events: none;` で見えない（テストの `.fill()` は値属性で動作）
+- 状態 `data-state="done|now|next"`:
+  - `done` → `color: var(--ink)`
+  - `now` → `color: var(--signal); animation: blink 0.6s steps(1) infinite`
+  - `next` → `color: var(--ink-50)`
+- スマホ: `font-size: clamp(2rem, 9vw, 3.5rem); height: clamp(96px, 16vw, 140px); letter-spacing: 0.1em;`
+- PC: `font-size: 4.5rem; height: 140px;`
+- `font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right;`
+- ハードシャドウ枠: `border: var(--hair); box-shadow: var(--shadow-hard);`
+
+### Brand（ヘッダー）
+
+```html
+<header class="brand">
+  <span class="brand__mark">DTMF</span>
+  <span class="brand__divider">/</span>
+  <span class="brand__name">WEB DIALER</span>
+  <span class="brand__meta">2026 · Opus 4.7</span>
+</header>
+```
+
+- `font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.04em;`
+- スマホ: 32px / PC: 48px
+
+### Dial Stage（ダイヤル本体・形状で差別化）
+
+| モード | 形状差（配色は同じ） |
+|--------|-------------------|
+| Pad (retro) | 正方形キー 3×4、PC: 88px / スマホ: 22vw, ハードシャドウ付き、押下で `translate: 4px 4px; box-shadow: none` |
+| Modern | Pad と同じ寸法だが**枠なし・反転色**（ink 背景・paper 文字）でコントラスト強。記号は半角 (`*`, `#`) |
+| Rotary | 円盤（既存実装ベースだが配色を `--ink/--paper/--signal` に差し替え、グラデを `linear-gradient` 排除して solid `--paper` に変更） |
+
+各キーの右下にキーキャップ表記（F-017）:
+```html
+<button class="key" data-key="5">
+  <span class="key__label">5</span>
+  <span class="key__cap">5</span>  <!-- PC のみ表示 (CSS @media) -->
+</button>
+```
+
+```css
+.key__cap { display: none; }
+@media (min-width: 1024px) {
+  .key__cap { display: inline-block; position: absolute; right: 6px; bottom: 4px;
+              font-family: var(--font-mono); font-size: 10px; color: var(--ink-50); }
+}
+```
+
+### Transport（再生バー）
+
+```html
+<nav class="transport" data-testid="playback-controls">
+  <button class="t-btn t-btn--primary" aria-label="番号をすべて再生">
+    <span class="t-btn__icon">▶</span><span class="t-btn__label">PLAY</span>
+    <kbd class="t-btn__kbd">↵</kbd>
+  </button>
+  <button class="t-btn" data-testid="stop-button" aria-label="再生を停止">
+    <span class="t-btn__icon">■</span><span class="t-btn__label">STOP</span>
+    <kbd class="t-btn__kbd">esc</kbd>
+  </button>
+  <button class="t-btn"><span>⏸</span>PAUSE</button>
+  <button class="t-btn"><span>▷</span>RESUME</button>
+  <button class="t-btn" data-testid="restart-button"><span>↻</span>RESTART</button>
+</nav>
+```
+
+- PLAY ボタンは `background: var(--signal); color: var(--paper);`
+- 他はゴースト（`background: transparent; border: var(--hair); color: var(--ink);`）
+- 全ボタン高さ 56px、`font-family: var(--font-sans); font-weight: 700; letter-spacing: 0.08em;`
+- `<kbd>` は PC のみ表示
+
+### Mode Picker
+
+```html
+<fieldset class="mode-pick" data-testid="mode-switcher">
+  <legend class="sr-only">UIモード切替</legend>
+  <button aria-pressed="true">[01] PAD</button>
+  <button aria-pressed="false">[02] MODERN</button>
+  <button aria-pressed="false">[03] ROTARY</button>
+</fieldset>
+```
+
+- 3 ボタン横並び（CSS Grid `grid-template-columns: repeat(3, 1fr)`）
+- 各ボタンは `border: var(--hair); padding: 12px; font-family: var(--font-mono);`
+- `aria-pressed="true"` 時: `background: var(--ink); color: var(--paper);`（反転）
+- 他: `background: var(--paper); color: var(--ink);`
+
+### Config / Details（補助パネル）
+
+`<details>` ベース。`summary` をブルータリスト化（`▾ CONFIG` / `▾ DETAILS`）。
+スライダのトラックを 2px の ink ライン、つまみを 16px の正方形 ink ブロックに統一。
+
+```css
+input[type="range"] { -webkit-appearance: none; height: 2px; background: var(--ink); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; background: var(--signal); border: var(--hair); border-radius: 0;
+}
+```
+
+### Toast
+
+固定位置・ハードシャドウ・solid color のみ。
+```css
+.toast { border: var(--hair); box-shadow: var(--shadow-hard); background: var(--paper); color: var(--ink); }
+.toast[data-kind="error"] { background: var(--signal); color: var(--paper); }
+```
+
+### Visualizer
+
+既存の Canvas を維持（DOM 構造維持）。グラデ＋shadowBlur を **`--signal` 一色・blur=0** に置換:
+
+```js
+ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue("--signal").trim() || "#FF3B30";
+ctx.lineWidth = 2;
+// shadowBlur 削除
+```
+
+枠は `border: var(--hair); background: var(--paper);`
+
+## P3-4. テクスチャ（紙繊維風ノイズ）
+
+`body::before` に SVG ノイズを擬似要素で重ねる:
+
+```css
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  opacity: 0.05; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+@media (prefers-reduced-motion: reduce) { body::before { display: none; } }
+```
+
+## P3-5. キーボード操作（F-017）
+
+`PhoneApp.tsx` の既存 `handleKeyboard` を維持し、追加で:
+- `Enter`: `playbackControls.startAuto()` を発火（フォーカス位置に依らず、document level）
+- `Escape`: 既存の stop ロジックを継続
+
+各 dial キーに `<kbd>` 風表記を追加。reduced-motion 時は blink アニメ抑制。
+
+## P3-6. アクセシビリティ（F-018）
+
+- **コントラスト**: `--ink(#0A0A0A)` on `--paper(#F2EFE6)` ≈ 17:1（AAA 達成）。`--signal(#FF3B30)` on `--paper` ≈ 3.95:1（AA 大文字テキスト要件は満たす。本文に使わない）
+- 全 testid 維持
+- フォーカスリング: `outline: 2px solid var(--signal); outline-offset: 2px;` を `:focus-visible` のみに適用
+- ボタン最小タップ: 全 dial キーは 44×44 以上を維持
+
+## P3-7. 削除・置換するソースファイル
+
+| ファイル | 操作 |
+|---------|------|
+| `src/styles/global.css` | **完全書き換え**（旧 token / 旧クラスを全削除） |
+| `src/pages/index.astro` | 書き換え（`.app-shell .page` 廃止、`<main class="stage">` ベース） |
+| `src/layouts/Base.astro` | `body` クラスから `.app-shell` を除去 |
+| `src/components/Footer.astro` | ブルータリスト調整 |
+| `src/islands/PhoneApp.tsx` | レイアウト DOM 再構築 |
+| `src/islands/NumberInput.tsx` | `Display` コンポーネントへ書き換え |
+| `src/islands/PlaybackControls.tsx` | Transport DOM へ書き換え |
+| `src/islands/ModeSwitcher.tsx` | Mode Picker DOM へ書き換え |
+| `src/islands/DialPad.tsx` | キーキャップ表記追加・正方形ボタン化 |
+| `src/islands/ModernPad.tsx` | 反転配色化 |
+| `src/islands/RotaryDial.tsx` | 配色を 3色に差し替え |
+| `src/islands/SettingsPanel.tsx` | スライダ・パネルをブルータリスト化 |
+| `src/islands/DetailPanel.tsx` | パネルをブルータリスト化 |
+| `src/islands/Toast.tsx` | カラー差し替え |
+| `src/islands/Visualizer.tsx` | グラデ・blur 排除、`--signal` 一色 |
+
+DTMF エンジン (`src/lib/`) は **一切変更しない**。
+
+## P3-8. テスト互換性マトリクス
+
+| テスト | 期待 DOM | 本設計の維持方法 |
+|-------|---------|-----------------|
+| `dial-pad.spec.ts` | `[data-testid=dial-pad]` 内に `aria-label="ダイヤルキー 5"` ボタン | `DialPad.tsx` のクラスのみ変更、testid / aria 維持 |
+| `mode-switch.spec.ts` | `[data-testid=mode-switcher]` 内に `モダン`/`回転` ボタン (exact) | ボタン文字列を `MODERN` ではなく `モダン`/`回転` のまま維持し、`[01] / [02] / [03]` プレフィックスは別 span に切り出さない（テキスト全体に含めない） → **代案**: テストが exact: true なので、表示は `[02] MODERN` でも `aria-label="モダン"` を持たせる。最終的に、**ボタンのテキストは「モダン」「回転」「レトロ」を保持し、コードナンバープレフィックスは付けない**（テスト互換優先） |
+| `auto-dial.spec.ts` | `[data-testid=phone-input]` に fill / `name="番号をすべて再生"` ボタン / `[data-testid=stop-button]` | Display 内の隠し input が `phone-input` testid を持つ・PLAY ボタンは `aria-label="番号をすべて再生"` を維持 |
+| `a11y.spec.ts` | axe-core 0 violations | コントラスト確保・全 aria-label 維持で達成 |
+
+「[01]」プレフィックス付き mode ラベルは断念し、ボタンテキストは「レトロ」「モダン」「回転」のままにする（テスト破壊を避けるため）。番号プレフィックスはモード切替ボタンの外（fieldset の legend 風の見出し）でブルータリスト感を出す。
+
+
 
 1. **音量曲線**: 0.0〜1.0 をリニアゲインで反映（要件 F-005）と記載があるが、人間の聴覚はログ的なので、UI 上の 0.5 が小さく感じる懸念がある。**リニアのまま** とするか、UI スライダだけ log カーブにマップするか。
 2. **回転ダイヤルのキュー上限 20** の妥当性。

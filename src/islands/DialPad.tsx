@@ -15,9 +15,24 @@ const LABELS: Record<DtmfKey, string> = {
   "7": "7",
   "8": "8",
   "9": "9",
-  "*": "＊",
+  "*": "✱",
   "0": "0",
-  "#": "＃",
+  "#": "#",
+};
+
+const CAPS: Record<DtmfKey, string> = {
+  "1": "1",
+  "2": "2",
+  "3": "3",
+  "4": "4",
+  "5": "5",
+  "6": "6",
+  "7": "7",
+  "8": "8",
+  "9": "9",
+  "*": "*",
+  "0": "0",
+  "#": "#",
 };
 
 export default function DialPad() {
@@ -30,7 +45,7 @@ export default function DialPad() {
         {(key) => (
           <button
             type="button"
-            class="keypad__key"
+            class="key"
             aria-label={`ダイヤルキー ${LABELS[key]}`}
             data-key={key}
             data-active={
@@ -42,7 +57,10 @@ export default function DialPad() {
             onPointerUp={(e) => void onKeyUp(key, e)}
             onPointerCancel={(e) => void onKeyUp(key, e)}
           >
-            {LABELS[key]}
+            <span class="key__label">{LABELS[key]}</span>
+            <span class="key__cap" aria-hidden="true">
+              {CAPS[key]}
+            </span>
           </button>
         )}
       </For>

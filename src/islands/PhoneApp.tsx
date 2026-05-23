@@ -2,15 +2,17 @@
 import { onMount, Show } from "solid-js";
 import { playDigitSequence } from "../lib/dtmf/dialBuffer";
 import { createDtmfEngine } from "../lib/dtmf/engine";
-import { type DtmfKey, isDtmfKey } from "../lib/dtmf/frequencyMap";
+import { isDtmfKey } from "../lib/dtmf/frequencyMap";
 import { createAutoDialSequencer } from "../lib/dtmf/sequencer";
 import { ServicesProvider } from "../lib/state/context";
 import { recordDialKey } from "../lib/state/dialActions";
 import {
   appState,
+  pushToast,
   resetPlayback,
   setAudioSupported,
   setContextSuspended,
+  setCurrentDigitIdx,
   setPlayback,
 } from "../lib/state/store";
 import DetailPanel from "./DetailPanel";
@@ -28,15 +30,65 @@ const engine = createDtmfEngine();
 const sequencer = createAutoDialSequencer(engine);
 
 const heldKeys = new Set<string>();
+let autoController: AbortController | null = null;
+
+async function runAutoPlay() {
+  if (!appState.digits) {
+    pushToast({ kind: "error", message: "再生できる番号がありません" });
+    return;
+  }
+  autoController?.abort();
+  const ac = new AbortController();
+  autoController = ac;
+  setPlayback("auto_running");
+  setCurrentDigitIdx(-1);
+  try {
+    await engine.ensureContext();
+    await sequencer.start(appState.digits, {
+      toneDurationMs: appState.settings.toneDurationMs,
+      gapMs: appState.settings.gapMs,
+      signal: ac.signal,
+      onTick: (idx) => setCurrentDigitIdx(idx),
+    });
+  } catch {
+    pushToast({ kind: "error", message: "再生に失敗しました" });
+  } finally {
+    if (autoController === ac) autoController = null;
+    resetPlayback();
+  }
+}
+
+function stopAll() {
+  autoController?.abort();
+  autoController = null;
+  engine.stopAll();
+  resetPlayback();
+  heldKeys.clear();
+}
 
 function handleKeyboard(e: KeyboardEvent) {
   const key = e.key;
+  const target = e.target as HTMLElement | null;
+  const inFormField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+
   if (key === "Escape") {
-    engine.stopAll();
-    resetPlayback();
-    heldKeys.clear();
+    stopAll();
     return;
   }
+
+  if (key === "Enter" && e.type === "keydown" && !e.repeat) {
+    if (inFormField && target && (target as HTMLInputElement).type === "tel") {
+      e.preventDefault();
+      void runAutoPlay();
+      return;
+    }
+    if (!inFormField) {
+      e.preventDefault();
+      void runAutoPlay();
+      return;
+    }
+  }
+
   if (!isDtmfKey(key)) return;
 
   if (e.type === "keydown" && !e.repeat) {
@@ -65,7 +117,8 @@ export default function PhoneApp() {
     const supported = engine.isSupported();
     setAudioSupported(supported);
     if (!supported) {
-      document.getElementById("audio-unsupported")?.classList.remove("hidden");
+      const banner = document.getElementById("audio-unsupported");
+      if (banner) banner.style.display = "block";
     }
     engine.setVolume(appState.settings.volume ** 2);
     document.addEventListener("keydown", handleKeyboard);
@@ -84,22 +137,16 @@ export default function PhoneApp() {
       .catch(() => setContextSuspended(true));
   };
 
-  const themeClass = () => {
-    const m = appState.mode;
-    if (m === "retro") return "theme-retro";
-    if (m === "modern") return "theme-modern";
-    return "theme-rotary";
-  };
-
   return (
-    <ServicesProvider value={{ engine, sequencer }}>
-      <div class={`dialer ${themeClass()}`} data-testid="phone-app">
+    <ServicesProvider value={{ engine, sequencer, runAutoPlay, stopAll }}>
+      <div class="phone-app" data-testid="phone-app">
         <Show when={appState.audio.contextSuspended}>
           <div class="audio-banner" role="status">
-            <p class="audio-banner__title">音を有効にしてください</p>
-            <p class="audio-banner__hint">スマホでは最初のタップが必要です</p>
-            <button type="button" class="btn btn--primary" onClick={activateAudio}>
-              有効にする
+            <p class="audio-banner__title">▶ 音を有効にしてください</p>
+            <p class="audio-banner__hint">スマホでは最初に 1 タップが必要です</p>
+            <button type="button" class="t-btn" onClick={activateAudio}>
+              <span class="t-btn__icon">▸</span>
+              <span class="t-btn__label">有効にする</span>
             </button>
           </div>
         </Show>
@@ -109,19 +156,22 @@ export default function PhoneApp() {
           </p>
         </Show>
 
-        <ModeSwitcher />
+        <div class="col-left">
+          <NumberInput />
+          <PlaybackControls />
+          <Visualizer />
+          <SettingsPanel />
+          <DetailPanel />
+        </div>
 
-        <section class="dial-section" aria-label="ダイヤル入力">
-          {appState.mode === "retro" && <DialPad />}
-          {appState.mode === "modern" && <ModernPad />}
-          {appState.mode === "rotary" && <RotaryDial />}
-        </section>
-
-        <NumberInput />
-        <PlaybackControls />
-        <Visualizer />
-        <SettingsPanel />
-        <DetailPanel />
+        <div class="col-right">
+          <ModeSwitcher />
+          <section class="dial-stage" aria-label="ダイヤル入力">
+            {appState.mode === "retro" && <DialPad />}
+            {appState.mode === "modern" && <ModernPad />}
+            {appState.mode === "rotary" && <RotaryDial />}
+          </section>
+        </div>
       </div>
       <Toast />
       <div class="sr-only" aria-live="polite" id="playback-announcer">

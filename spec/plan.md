@@ -627,6 +627,141 @@ graph TD
 
 ---
 
+# Phase 3 実装計画（デザイン完全再構築）
+
+> 2026-05-23 追加。Phase 3 設計 (P3-1〜P3-8) に対応する実装タスク。機能（DTMF エンジン・状態管理）は変更しない。
+
+## 計画 P3-A: デザイントークン基盤と Base レイアウト書き換え
+
+**ステータス**: 完了
+
+**目的**: `global.css` を完全書き換えして 3 色 + 2 フォントの基盤を作る。`Base.astro` から `app-shell` クラスを除く。
+
+**タスク**:
+- [x] `src/styles/global.css` を完全書き換え（旧 token, .app-shell, .page, .dialer, .dial-section, .keypad, .glass-panel, theme-* を全削除）
+- [x] `:root` に 3 色 + spacing + 枠線 + ハードシャドウ + フォントを定義
+- [x] `prefers-color-scheme: dark` で ink/paper 反転
+- [x] `body::before` に SVG ノイズオーバーレイ（reduced-motion 時は無効）
+- [x] `src/layouts/Base.astro` の `<body class="app-shell antialiased">` から `app-shell` を除く
+
+**完了条件**:
+- [x] 旧クラス階層が CSS から完全消滅している（`grep "app-shell\|theme-retro\|glass-panel" src/styles/` で 0 件）
+- [x] グラデーション (`linear-gradient`) が CSS に存在しない
+
+## 計画 P3-B: index.astro と PhoneApp.tsx のレイアウト再構築
+
+**ステータス**: 完了
+
+**目的**: `<main class="stage">` をベースに、スマホ縦1カラム / PC 2カラム Grid を実現。
+
+**タスク**:
+- [x] `src/pages/index.astro` を書き換え。`<div class="app-shell page">` → `<main class="stage">`
+- [x] Brand ヘッダー（DTMF / WEB DIALER / 2026 / Opus 4.7）を index.astro に配置
+- [x] `PhoneApp.tsx` を「stage 内のレイアウト構成」のみ担当する形に再構築
+- [x] PC 用 grid (`.stage--desk` または `@media`) を CSS で実装
+- [x] data-testid="phone-app" を維持
+
+**完了条件**:
+- [x] 1024px 未満で縦 1 カラム、1024px 以上で 2 カラムに切り替わる
+- [x] `bun test` の component / unit テストが全て pass
+
+## 計画 P3-C: Display コンポーネント（番号ディスプレイ主役化）
+
+**ステータス**: 完了
+
+**目的**: `NumberInput.tsx` を「電卓 LCD 風 Display」に書き換え。`output` 主体・隠し input・状態ラベル・桁カウンタ。
+
+**タスク**:
+- [x] `NumberInput.tsx` を Display 構造に書き換え
+- [x] 隠し input は `data-testid="phone-input"` を維持・absolute で非表示
+- [x] 状態ラベル INPUT / PLAYING / DONE を appState.playback から算出
+- [x] 桁カウンタ `N / 64` を表示
+- [x] `data-state="done|now|next"` で 3 段階の桁表現
+- [x] プレースホルダ `— — — — —` を空状態で表示
+
+**完了条件**:
+- [x] テスト `NumberInput integration` が pass
+- [x] テスト `auto-dial.spec.ts` の `getByTestId("phone-input").fill(...)` が動作
+
+## 計画 P3-D: Transport（再生バー）・Mode Picker・Settings/Detail パネルのブルータリスト化
+
+**ステータス**: 完了
+
+**目的**: `PlaybackControls.tsx` / `ModeSwitcher.tsx` / `SettingsPanel.tsx` / `DetailPanel.tsx` / `Toast.tsx` を `--ink/--paper/--signal` で書き換え。
+
+**タスク**:
+- [x] `PlaybackControls.tsx`: t-btn 構造、PLAY=signal 背景、`<kbd>` を PC のみ表示
+- [x] `ModeSwitcher.tsx`: 反転式トグル（aria-pressed=true で ink 背景）
+- [x] `SettingsPanel.tsx`: スライダのトラック・つまみを ink/signal 化
+- [x] `DetailPanel.tsx`: panel スタイルに合わせる
+- [x] `Toast.tsx`: solid color に書き換え
+
+**完了条件**:
+- [x] 既存テスト全 pass
+- [x] `aria-label="番号をすべて再生"` / `data-testid="stop-button"` / `data-testid="restart-button"` 維持
+
+## 計画 P3-E: DialPad / ModernPad / RotaryDial のキー再設計
+
+**ステータス**: 完了
+
+**目的**: 正方形キー + ハードシャドウ + キーキャップ表記。配色は 3 色に統一し、モード差は形状で表現。
+
+**タスク**:
+- [x] `DialPad.tsx`: 正方形キー、キーキャップ `<span class="key__cap">` 追加（PC のみ表示）
+- [x] `ModernPad.tsx`: 反転配色（ink 背景・paper 文字）、枠なし
+- [x] `RotaryDial.tsx`: linear-gradient を削除し solid `--paper`、ハードシャドウ
+- [x] testid と aria-label 維持（`dial-pad`, `modern-pad`, `rotary-dial`, `ダイヤルキー N`）
+
+**完了条件**:
+- [x] テスト `dial-pad.spec.ts` / `mode-switch.spec.ts` が pass
+
+## 計画 P3-F: Visualizer の monochrome 化
+
+**ステータス**: 完了
+
+**目的**: グラデ＋shadowBlur を排除し、`--signal` 一色の波形にする。
+
+**タスク**:
+- [x] `Visualizer.tsx` の `ctx.createLinearGradient` を削除
+- [x] `ctx.strokeStyle` を `--signal` の computed value に
+- [x] `shadowBlur` を削除
+- [x] canvas の枠を `border: 2px solid var(--ink); background: var(--paper);`
+
+**完了条件**:
+- [x] テスト `Visualizer.test.tsx` が pass
+
+## 計画 P3-G: PC キーボードショートカット表示と Enter/Esc
+
+**ステータス**: 完了
+
+**目的**: 物理キーボード操作の前面化。Enter で PLAY / Esc で STOP。
+
+**タスク**:
+- [x] `PhoneApp.tsx` の `handleKeyboard` で `Enter` 押下時に PLAY を発火（document level、ただし textarea/input フォーカス時は除外）
+- [x] 各 t-btn に `<kbd>` を追加（PC のみ表示）
+- [x] 既存の DTMF 数字キー処理を維持
+
+**完了条件**:
+- [x] PC 表示でキーキャップが視認できる
+- [x] Enter で再生が始まる、Esc で止まる
+
+## 計画 P3-H: 動作確認・品質ゲート
+
+**ステータス**: 完了
+
+**タスク**:
+- [x] `bash scripts/lint.sh` PASS
+- [x] `bash scripts/build.sh` PASS
+- [x] `bash scripts/test.sh` PASS
+- [x] グラデーション grep 0 件確認
+- [x] `--accent` 残存 0 件確認
+
+**完了条件**:
+- [x] 全品質ゲート pass
+- [x] テスト互換性マトリクス全 pass
+
+---
+
 ## 最終計画（固定・必須）: 脆弱性レビュー
 
 **ステータス**: 完了

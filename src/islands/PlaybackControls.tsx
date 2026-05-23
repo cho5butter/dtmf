@@ -10,16 +10,25 @@ import {
 } from "../lib/state/store";
 
 export default function PlaybackControls() {
-  const { engine, sequencer } = useServices();
+  const services = useServices();
+  const { engine, sequencer } = services;
   const [abortController, setAbortController] = createSignal<AbortController | null>(null);
 
   const stop = () => {
+    if (services.stopAll) {
+      services.stopAll();
+      return;
+    }
     abortController()?.abort();
     engine.stopAll();
     resetPlayback();
   };
 
   const startAuto = async () => {
+    if (services.runAutoPlay) {
+      await services.runAutoPlay();
+      return;
+    }
     if (!appState.digits) {
       pushToast({ kind: "error", message: "再生できる番号がありません" });
       return;
@@ -38,7 +47,7 @@ export default function PlaybackControls() {
         onTick: (idx) => setCurrentDigitIdx(idx),
       });
     } catch {
-      pushToast({ kind: "error", message: "再生に失敗しました。ページを再読み込みしてください" });
+      pushToast({ kind: "error", message: "再生に失敗しました" });
     } finally {
       resetPlayback();
     }
@@ -50,28 +59,32 @@ export default function PlaybackControls() {
   const isPaused = () => appState.playback === "auto_paused";
 
   return (
-    <div class="playback-bar" data-testid="playback-controls">
+    <nav class="transport transport-sticky" data-testid="playback-controls">
       <button
         type="button"
-        class="btn btn--primary btn--play"
+        class="t-btn t-btn--primary"
         onClick={() => void startAuto()}
         disabled={isRunning()}
         aria-label="番号をすべて再生"
       >
-        再生
+        <span class="t-btn__icon">▶</span>
+        <span class="t-btn__label">PLAY</span>
+        <kbd class="t-btn__kbd">↵</kbd>
       </button>
       <button
         type="button"
-        class="btn btn--secondary"
+        class="t-btn"
         onClick={stop}
         data-testid="stop-button"
         aria-label="再生を停止"
       >
-        停止
+        <span class="t-btn__icon">■</span>
+        <span class="t-btn__label">STOP</span>
+        <kbd class="t-btn__kbd">esc</kbd>
       </button>
       <button
         type="button"
-        class="btn btn--secondary"
+        class="t-btn"
         onClick={() => {
           if (isRunning()) {
             sequencer.pause();
@@ -79,12 +92,14 @@ export default function PlaybackControls() {
           }
         }}
         disabled={!isRunning()}
+        aria-label="一時停止"
       >
-        一時停止
+        <span class="t-btn__icon">⏸</span>
+        <span class="t-btn__label">PAUSE</span>
       </button>
       <button
         type="button"
-        class="btn btn--secondary"
+        class="t-btn"
         onClick={() => {
           if (isPaused()) {
             sequencer.resume();
@@ -92,20 +107,24 @@ export default function PlaybackControls() {
           }
         }}
         disabled={!isPaused()}
+        aria-label="再開"
       >
-        再開
+        <span class="t-btn__icon">▷</span>
+        <span class="t-btn__label">RESUME</span>
       </button>
       <button
         type="button"
-        class="btn btn--secondary"
+        class="t-btn"
         onClick={() => {
           stop();
           void startAuto();
         }}
         data-testid="restart-button"
+        aria-label="最初から再生"
       >
-        最初から
+        <span class="t-btn__icon">↻</span>
+        <span class="t-btn__label">RESTART</span>
       </button>
-    </div>
+    </nav>
   );
 }

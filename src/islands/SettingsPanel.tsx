@@ -6,17 +6,19 @@ export default function SettingsPanel() {
   const { engine } = useServices();
 
   return (
-    <details class="glass-panel" data-testid="settings-panel">
-      <summary>設定</summary>
-      <div class="mt-4 space-y-4">
-        <label class="block text-sm text-zinc-300">
-          トーン長 (ms): {appState.settings.toneDurationMs}
+    <details class="panel" data-testid="settings-panel">
+      <summary>CONFIG</summary>
+      <div class="panel__body">
+        <label class="range-field">
+          <span class="range-field__label">
+            <span>Tone duration</span>
+            <span class="range-field__value">{appState.settings.toneDurationMs} ms</span>
+          </span>
           <input
             type="range"
             min="80"
             max="500"
             step="10"
-            class="mt-2 w-full accent-blue-500"
             value={appState.settings.toneDurationMs}
             onInput={(e) => {
               const v = Number((e.currentTarget as HTMLInputElement).value);
@@ -26,14 +28,16 @@ export default function SettingsPanel() {
             data-testid="tone-duration"
           />
         </label>
-        <label class="block text-sm text-zinc-300">
-          桁間ギャップ (ms): {appState.settings.gapMs}
+        <label class="range-field">
+          <span class="range-field__label">
+            <span>Gap between digits</span>
+            <span class="range-field__value">{appState.settings.gapMs} ms</span>
+          </span>
           <input
             type="range"
             min="30"
             max="500"
             step="10"
-            class="mt-2 w-full accent-blue-500"
             value={appState.settings.gapMs}
             onInput={(e) => {
               const v = Number((e.currentTarget as HTMLInputElement).value);
@@ -43,14 +47,16 @@ export default function SettingsPanel() {
             data-testid="gap-ms"
           />
         </label>
-        <label class="block text-sm text-zinc-300">
-          音量: {Math.round(appState.settings.volume * 100)}%
+        <label class="range-field">
+          <span class="range-field__label">
+            <span>Volume</span>
+            <span class="range-field__value">{Math.round(appState.settings.volume * 100)}%</span>
+          </span>
           <input
             type="range"
             min="0"
             max="100"
             step="1"
-            class="mt-2 w-full accent-blue-500"
             value={appState.settings.volume * 100}
             onInput={(e) => {
               const v = Number((e.currentTarget as HTMLInputElement).value) / 100;

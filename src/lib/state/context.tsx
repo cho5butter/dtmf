@@ -6,6 +6,8 @@ import type { AutoDialSequencer } from "../dtmf/sequencer";
 export interface AppServices {
   engine: DtmfEngine;
   sequencer: AutoDialSequencer;
+  runAutoPlay?: () => Promise<void> | void;
+  stopAll?: () => void;
 }
 
 const ServicesContext = createContext<AppServices>();
