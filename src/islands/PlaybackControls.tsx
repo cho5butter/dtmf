@@ -21,7 +21,7 @@ export default function PlaybackControls() {
 
   const startAuto = async () => {
     if (!appState.digits) {
-      pushToast({ kind: "error", message: "ダイヤル可能な文字がありません" });
+      pushToast({ kind: "error", message: "再生できる番号がありません" });
       return;
     }
     abortController()?.abort();
@@ -38,7 +38,7 @@ export default function PlaybackControls() {
         onTick: (idx) => setCurrentDigitIdx(idx),
       });
     } catch {
-      pushToast({ kind: "error", message: "音声合成に失敗しました。再読込してください" });
+      pushToast({ kind: "error", message: "再生に失敗しました。ページを再読み込みしてください" });
     } finally {
       resetPlayback();
     }
@@ -46,55 +46,65 @@ export default function PlaybackControls() {
 
   onCleanup(() => stop());
 
+  const isRunning = () => appState.playback === "auto_running";
+  const isPaused = () => appState.playback === "auto_paused";
+
   return (
-    <div class="mt-5 flex flex-wrap gap-2" data-testid="playback-controls">
+    <div class="playback-bar" data-testid="playback-controls">
       <button
         type="button"
-        class="btn-primary"
+        class="btn btn--primary btn--play"
         onClick={() => void startAuto()}
-        disabled={appState.playback === "auto_running"}
+        disabled={isRunning()}
+        aria-label="番号をすべて再生"
       >
-        自動ダイヤル
+        再生
       </button>
-      <button type="button" class="btn-ghost" onClick={stop} data-testid="stop-button">
+      <button
+        type="button"
+        class="btn btn--secondary"
+        onClick={stop}
+        data-testid="stop-button"
+        aria-label="再生を停止"
+      >
         停止
       </button>
       <button
         type="button"
-        class="btn-ghost"
+        class="btn btn--secondary"
         onClick={() => {
-          if (appState.playback === "auto_running") {
+          if (isRunning()) {
             sequencer.pause();
             setPlayback("auto_paused");
           }
         }}
-        disabled={appState.playback !== "auto_running"}
+        disabled={!isRunning()}
       >
         一時停止
       </button>
       <button
         type="button"
-        class="btn-ghost"
+        class="btn btn--secondary"
         onClick={() => {
-          if (appState.playback === "auto_paused") {
+          if (isPaused()) {
             sequencer.resume();
             setPlayback("auto_running");
           }
         }}
-        disabled={appState.playback !== "auto_paused"}
+        disabled={!isPaused()}
       >
         再開
       </button>
       <button
         type="button"
-        class="btn-ghost"
+        class="btn btn--secondary"
         onClick={() => {
           stop();
           void startAuto();
         }}
         data-testid="restart-button"
       >
-        やり直し
+        最初から
       </button>
     </div>
   );

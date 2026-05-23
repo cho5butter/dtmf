@@ -7,36 +7,50 @@ export default function NumberInput() {
     setInput(value);
   };
 
+  const hint = () =>
+    appState.hadInternationalPrefix
+      ? "先頭の + は表示のみ（DTMF では鳴りません）"
+      : "0〜9、*、#。キーを押して番号をため、離すとそのキーの音が鳴ります";
+
   return (
-    <div class="mb-4">
-      <label
-        class="mb-2 block text-xs font-medium tracking-wide text-zinc-400 uppercase"
-        for="phone-input"
-      >
-        電話番号
+    <div class="number-field" data-testid="number-field">
+      <label class="number-field__label" for="phone-input">
+        入力番号
       </label>
       <input
         id="phone-input"
         type="tel"
         inputmode="tel"
         autocomplete="tel"
-        class="display-field"
-        placeholder="番号を入力"
+        class="number-field__input"
+        placeholder="番号がここに表示されます"
         value={appState.raw}
         onInput={handleInput}
         aria-label="電話番号入力"
         aria-describedby="intl-prefix-note"
         data-testid="phone-input"
       />
-      <p id="intl-prefix-note" class="hint-text mt-2">
-        {appState.hadInternationalPrefix
-          ? "先頭の + は表示のみで、DTMF では鳴らされません。"
-          : "0-9、*、# のみ。キーは押下でため、離すと再生します。"}
+      <p id="intl-prefix-note" class="number-field__hint">
+        {hint()}
       </p>
-      <div class="digit-preview mt-3 min-h-[1.25rem] text-base" aria-live="polite">
-        {appState.display.split("").map((char, idx) => (
-          <span data-active={appState.currentDigitIdx === idx ? "true" : undefined}>{char}</span>
-        ))}
+      <div
+        class="number-field__preview"
+        role="status"
+        aria-label="再生中の桁"
+        data-testid="digit-preview"
+      >
+        {appState.display.length === 0 ? (
+          <span class="number-field__preview-empty">—</span>
+        ) : (
+          appState.display.split("").map((char, idx) => (
+            <span
+              class="number-field__digit"
+              data-active={appState.currentDigitIdx === idx ? "true" : undefined}
+            >
+              {char}
+            </span>
+          ))
+        )}
       </div>
     </div>
   );

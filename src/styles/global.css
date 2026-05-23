@@ -14,7 +14,7 @@
   }
 
   html {
-    font-family: system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-family: system-ui, -apple-system, "Hiragino Sans", "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -26,61 +26,99 @@
 
 @layer components {
   :root {
-    --bg: #0c0c0e;
-    --surface: #161618;
-    --surface-raised: #1e1e22;
-    --border: rgb(255 255 255 / 0.08);
-    --text: #f4f4f5;
-    --text-muted: #b4b4be;
-    --accent: #3b82f6;
-    --accent-soft: rgb(59 130 246 / 0.15);
-    --danger: #ef4444;
-    --shadow-key: rgb(0 0 0 / 0.45);
+    --bg: #111113;
+    --surface: #1a1a1e;
+    --surface-2: #242428;
+    --border: rgb(255 255 255 / 0.1);
+    --text: #fafafa;
+    --text-muted: #a1a1aa;
+    --accent: #60a5fa;
+    --accent-bg: rgb(96 165 250 / 0.18);
+    --danger: #f87171;
+    --key-size: clamp(3.25rem, 11vw, 4.25rem);
+    --radius: 1rem;
   }
 
   .app-shell {
     min-height: 100dvh;
-    background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgb(59 130 246 / 0.12), transparent), var(--bg);
+    background: var(--bg);
     color: var(--text);
   }
 
-  .phone-card {
-    border-radius: 1.25rem;
+  .page {
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
+    padding: 1rem 1rem 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .page {
+      max-width: 24rem;
+      padding-top: 1.5rem;
+    }
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .page-header__eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .page-header__title {
+    margin-top: 0.25rem;
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header__lead {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .dialer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: calc(var(--radius) + 0.25rem);
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow:
-      0 0 0 1px rgb(0 0 0 / 0.2),
-      0 24px 48px rgb(0 0 0 / 0.35);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 0.35);
   }
 
-  .display-field {
-    width: 100%;
-    border-radius: 0.75rem;
-    border: 1px solid var(--border);
-    background: var(--surface-raised);
-    padding: 0.875rem 1rem;
-    font-size: 1.5rem;
-    font-weight: 300;
-    letter-spacing: 0.12em;
-    color: var(--text);
-    caret-color: var(--accent);
+  .audio-banner {
+    padding: 1rem;
+    border-radius: var(--radius);
+    border: 1px dashed var(--border);
+    background: var(--accent-bg);
+    text-align: center;
   }
 
-  .display-field::placeholder {
-    color: var(--text-muted);
-    letter-spacing: normal;
-  }
-
-  .digit-preview {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-  }
-
-  .digit-preview [data-active="true"] {
-    color: var(--accent);
+  .audio-banner__title {
+    font-size: 0.875rem;
     font-weight: 600;
+  }
+
+  .audio-banner__hint {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .audio-error {
+    font-size: 0.875rem;
+    color: var(--danger);
   }
 
   .mode-segment {
@@ -88,14 +126,15 @@
     gap: 0.25rem;
     padding: 0.25rem;
     border-radius: 0.75rem;
-    background: var(--surface-raised);
+    background: var(--surface-2);
     border: 1px solid var(--border);
   }
 
   .mode-segment button {
     flex: 1;
+    min-height: 2.5rem;
     border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.5rem;
     font-size: 0.8125rem;
     font-weight: 500;
     color: var(--text-muted);
@@ -107,127 +146,226 @@
   }
 
   .mode-segment button[aria-pressed="true"] {
-    background: rgb(59 130 246 / 0.25);
-    color: #93c5fd;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
-  }
-
-  .dtmf-key {
-    min-width: 44px;
-    min-height: 52px;
-    border-radius: 9999px;
-    font-size: 1.375rem;
-    font-weight: 400;
-    border: none;
-    color: var(--text);
-    background: var(--surface-raised);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.06) inset,
-      0 4px 12px var(--shadow-key);
-    transition:
-      transform 0.08s ease,
-      box-shadow 0.08s ease,
-      background 0.08s ease;
-  }
-
-  .dtmf-key:hover {
-    background: rgb(255 255 255 / 0.08);
-  }
-
-  .dtmf-key:active,
-  .dtmf-key[data-active="true"] {
-    transform: scale(0.94);
-    box-shadow: 0 1px 4px var(--shadow-key);
-    background: var(--accent-soft);
+    background: var(--accent-bg);
     color: var(--accent);
   }
 
-  .theme-retro .dtmf-key {
-    background: hsl(160 25% 18%);
-    color: hsl(150 60% 75%);
+  .dial-section {
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
   }
 
-  .theme-modern .dtmf-key {
-    background: hsl(220 15% 14%);
-    color: hsl(180 90% 65%);
+  .theme-rotary .dial-section {
+    background: hsl(35 30% 94%);
+    color: hsl(30 10% 18%);
+    border-color: hsl(30 15% 80%);
   }
 
-  .theme-rotary .dtmf-key {
-    background: hsl(30 15% 88%);
-    color: hsl(30 10% 20%);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.5rem, 2vw, 0.75rem);
+    justify-items: center;
+  }
+
+  .keypad__key {
+    width: var(--key-size);
+    height: var(--key-size);
+    border-radius: 50%;
+    border: none;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    font-weight: 500;
+    color: var(--text);
+    background: var(--bg);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+    transition:
+      transform 0.08s ease,
+      background 0.08s ease;
+    touch-action: manipulation;
+  }
+
+  .keypad__key:hover {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .keypad__key:active,
+  .keypad__key[data-active="true"] {
+    transform: scale(0.94);
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+
+  .theme-retro .keypad__key {
+    background: hsl(160 22% 14%);
+    color: hsl(150 55% 72%);
+  }
+
+  .theme-modern .keypad__key,
+  .keypad--modern .keypad__key {
+    background: hsl(220 18% 12%);
+    color: hsl(185 80% 62%);
+  }
+
+  .theme-rotary .keypad__key {
+    background: hsl(35 25% 88%);
+    color: hsl(30 12% 22%);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+  }
+
+  .number-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .number-field__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .number-field__input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: clamp(1.125rem, 4vw, 1.375rem);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    caret-color: var(--accent);
+  }
+
+  .number-field__input::placeholder {
+    color: var(--text-muted);
+    letter-spacing: normal;
+    font-size: 0.9375rem;
+  }
+
+  .number-field__hint {
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+  }
+
+  .number-field__preview {
+    min-height: 1.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: rgb(0 0 0 / 0.2);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .number-field__preview-empty {
+    opacity: 0.4;
+  }
+
+  .number-field__digit[data-active="true"] {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .playback-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 400px) {
+    .playback-bar {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  .btn {
+    min-height: 2.75rem;
+    border-radius: 9999px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition:
+      opacity 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+    touch-action: manipulation;
+  }
+
+  .btn:hover:not(:disabled) {
+    color: var(--text);
+    border-color: rgb(255 255 255 / 0.2);
+  }
+
+  .btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .btn--primary {
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .btn--primary:hover:not(:disabled) {
+    opacity: 0.92;
+    color: #fff;
+  }
+
+  .btn--play {
+    grid-column: 1 / -1;
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 400px) {
+    .btn--play {
+      grid-column: span 2;
+    }
+  }
+
+  .btn--secondary {
+    background: var(--surface-2);
+  }
+
+  .audio-banner .btn {
+    margin-top: 0.75rem;
   }
 
   .glass-panel {
-    border-radius: 0.75rem;
+    border-radius: var(--radius);
     border: 1px solid var(--border);
-    background: rgb(255 255 255 / 0.03);
-    backdrop-filter: blur(12px);
+    background: rgb(255 255 255 / 0.02);
+    padding: 0.875rem 1rem;
   }
 
   .glass-panel summary {
     cursor: pointer;
+    font-size: 0.8125rem;
     font-weight: 500;
-    font-size: 0.875rem;
     color: var(--text-muted);
   }
 
-  .btn-primary {
-    border-radius: 9999px;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    background: #2563eb;
-    color: #f8fafc;
-    border: none;
-    transition: opacity 0.15s ease;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    opacity: 0.9;
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .btn-ghost {
-    border-radius: 9999px;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    background: transparent;
+  .hint-text {
+    font-size: 0.75rem;
     color: var(--text-muted);
-    border: 1px solid var(--border);
+    line-height: 1.4;
   }
 
-  .btn-ghost:hover:not(:disabled) {
-    color: var(--text);
-    border-color: rgb(255 255 255 / 0.15);
-  }
-
-  .retro-panel,
-  .modern-panel,
-  .rotary-panel {
-    border-radius: 1rem;
-    padding: 1rem;
-    border: 1px solid var(--border);
-  }
-
-  .theme-retro.retro-panel {
-    background: hsl(160 30% 10%);
-  }
-
-  .theme-modern.modern-panel {
-    background: hsl(220 20% 6%);
-  }
-
-  .theme-rotary.rotary-panel {
-    background: hsl(30 25% 92%);
-    color: hsl(30 10% 15%);
-  }
-
+  /* Rotary dial (existing structure) */
   .rotary-disc {
     border: 3px solid hsl(30 10% 20%);
     background: linear-gradient(145deg, hsl(30 20% 88%), hsl(30 15% 78%));
@@ -242,22 +380,16 @@
     box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
   }
 
-  .activate-overlay {
-    border-radius: 1rem;
-    border: 1px dashed var(--border);
-    background: var(--accent-soft);
-    padding: 1.25rem;
-    text-align: center;
-  }
-
-  .activate-overlay button {
-    margin-top: 0.75rem;
-  }
-
-  .hint-text {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    line-height: 1.4;
+  /* Legacy class aliases for rotary aux keys */
+  .dtmf-key {
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 9999px;
+    font-size: 1rem;
+    border: none;
+    padding: 0.5rem 1rem;
+    background: var(--surface-2);
+    color: var(--text);
   }
 }
 
@@ -270,7 +402,7 @@
     transition-duration: 0.01ms;
   }
 
-  .dtmf-key {
+  .keypad__key {
     transition: none;
   }
 }

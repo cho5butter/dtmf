@@ -6,7 +6,7 @@ export default function SettingsPanel() {
   const { engine } = useServices();
 
   return (
-    <details class="glass-panel mt-4 p-4" data-testid="settings-panel">
+    <details class="glass-panel" data-testid="settings-panel">
       <summary>設定</summary>
       <div class="mt-4 space-y-4">
         <label class="block text-sm text-zinc-300">

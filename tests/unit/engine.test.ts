@@ -53,6 +53,17 @@ describe("DtmfEngine", () => {
     expect(fake.currentTime).toBeGreaterThanOrEqual(start);
   });
 
+  test("scheduled playTone does not cancel other future tones", async () => {
+    const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
+    await engine.ensureContext();
+    const t0 = fake.currentTime + 0.1;
+    const step = 0.2;
+    void engine.playTone("1", 100, t0);
+    void engine.playTone("2", 100, t0 + step);
+    void engine.playTone("3", 100, t0 + step * 2);
+    expect(fake.createdNodes.oscillators.length).toBe(6);
+  });
+
   test("stopAll clears active tone", async () => {
     const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
     await engine.ensureContext();

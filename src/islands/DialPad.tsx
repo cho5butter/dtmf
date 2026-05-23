@@ -25,13 +25,12 @@ export default function DialPad() {
   const { onKeyDown, onKeyUp } = usePadDialRelease(engine);
 
   return (
-    <div class="grid grid-cols-3 gap-3" data-testid="dial-pad">
-      <p class="hint-text col-span-3 mb-1">押して数字をため、離すとトーンが鳴ります</p>
+    <div class="keypad" data-testid="dial-pad">
       <For each={DTMF_KEYS}>
         {(key) => (
           <button
             type="button"
-            class="dtmf-key"
+            class="keypad__key"
             aria-label={`ダイヤルキー ${LABELS[key]}`}
             data-key={key}
             data-active={
