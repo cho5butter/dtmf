@@ -1,9 +1,11 @@
 /** @jsxImportSource solid-js */
 import { onMount, Show } from "solid-js";
+import { playDigitSequence } from "../lib/dtmf/dialBuffer";
 import { createDtmfEngine } from "../lib/dtmf/engine";
-import { isDtmfKey } from "../lib/dtmf/frequencyMap";
+import { type DtmfKey, isDtmfKey } from "../lib/dtmf/frequencyMap";
 import { createAutoDialSequencer } from "../lib/dtmf/sequencer";
 import { ServicesProvider } from "../lib/state/context";
+import { recordDialKey } from "../lib/state/dialActions";
 import {
   appState,
   resetPlayback,
@@ -25,24 +27,36 @@ import Visualizer from "./Visualizer";
 const engine = createDtmfEngine();
 const sequencer = createAutoDialSequencer(engine);
 
+const heldKeys = new Set<string>();
+
 function handleKeyboard(e: KeyboardEvent) {
   const key = e.key;
   if (key === "Escape") {
     engine.stopAll();
     resetPlayback();
+    heldKeys.clear();
     return;
   }
-  if (isDtmfKey(key)) {
+  if (!isDtmfKey(key)) return;
+
+  if (e.type === "keydown" && !e.repeat) {
     e.preventDefault();
+    heldKeys.add(key);
     void engine.ensureContext();
-    engine.pressKey(key);
+    recordDialKey(key);
     setPlayback("key_held");
-    const onUp = () => {
-      engine.releaseKey();
-      setPlayback("idle");
-      window.removeEventListener("keyup", onUp);
-    };
-    window.addEventListener("keyup", onUp);
+    return;
+  }
+
+  if (e.type === "keyup" && heldKeys.has(key)) {
+    e.preventDefault();
+    heldKeys.delete(key);
+    void playDigitSequence(engine, key, {
+      toneDurationMs: appState.settings.toneDurationMs,
+      gapMs: appState.settings.gapMs,
+    }).finally(() => {
+      if (heldKeys.size === 0) setPlayback("idle");
+    });
   }
 }
 
@@ -53,59 +67,73 @@ export default function PhoneApp() {
     if (!supported) {
       document.getElementById("audio-unsupported")?.classList.remove("hidden");
     }
-    engine.setVolume(appState.settings.volume);
+    engine.setVolume(appState.settings.volume ** 2);
     document.addEventListener("keydown", handleKeyboard);
+    document.addEventListener("keyup", handleKeyboard);
     return () => {
       document.removeEventListener("keydown", handleKeyboard);
+      document.removeEventListener("keyup", handleKeyboard);
       engine.stopAll();
     };
   });
 
-  const onFirstInteraction = () => {
+  const activateAudio = () => {
     void engine
       .ensureContext()
       .then(() => setContextSuspended(false))
       .catch(() => setContextSuspended(true));
   };
 
+  const themeClass = () => {
+    const m = appState.mode;
+    if (m === "retro") return "theme-retro";
+    if (m === "modern") return "theme-modern";
+    return "theme-rotary";
+  };
+
   return (
     <ServicesProvider value={{ engine, sequencer }}>
-      <div
-        class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"
-        onPointerDown={onFirstInteraction}
-        data-testid="phone-app"
-      >
+      <div class={`phone-card p-5 ${themeClass()}`} data-testid="phone-app">
         <Show when={appState.audio.contextSuspended}>
-          <p class="mb-4 rounded-lg bg-amber-100 px-3 py-2 text-sm text-amber-900" role="status">
-            画面をタップして音を有効にしてください
-          </p>
+          <div class="activate-overlay mb-5" role="status">
+            <p class="text-sm font-medium text-zinc-200">受話器を上げて音を有効にする</p>
+            <p class="hint-text mt-1">iOS などでは最初の操作が必要です</p>
+            <button type="button" class="btn-primary" onClick={activateAudio}>
+              有効にする
+            </button>
+          </div>
         </Show>
         <Show when={!appState.audio.supported}>
-          <p class="mb-4 text-sm text-red-700" role="alert">
+          <p class="mb-4 text-sm text-red-400" role="alert">
             Web Audio API に対応していません
           </p>
         </Show>
+
         <NumberInput />
         <ModeSwitcher />
-        {appState.mode === "retro" && (
-          <div class="retro-panel">
-            <DialPad />
-          </div>
-        )}
-        {appState.mode === "modern" && (
-          <div class="modern-panel">
-            <ModernPad />
-          </div>
-        )}
-        {appState.mode === "rotary" && (
-          <div class="rotary-panel">
-            <RotaryDial />
-          </div>
-        )}
+
+        <section class="mt-4" aria-label="ダイヤル入力">
+          {appState.mode === "retro" && (
+            <div class="retro-panel">
+              <DialPad />
+            </div>
+          )}
+          {appState.mode === "modern" && (
+            <div class="modern-panel">
+              <ModernPad />
+            </div>
+          )}
+          {appState.mode === "rotary" && (
+            <div class="rotary-panel">
+              <RotaryDial />
+            </div>
+          )}
+        </section>
+
         <PlaybackControls />
+        <Visualizer />
         <SettingsPanel />
         <DetailPanel />
-        <Visualizer />
       </div>
       <Toast />
       <div class="sr-only" aria-live="polite" id="playback-announcer">

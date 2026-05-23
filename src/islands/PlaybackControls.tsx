@@ -47,26 +47,21 @@ export default function PlaybackControls() {
   onCleanup(() => stop());
 
   return (
-    <div class="mt-4 flex flex-wrap gap-2" data-testid="playback-controls">
+    <div class="mt-5 flex flex-wrap gap-2" data-testid="playback-controls">
       <button
         type="button"
-        class="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500"
+        class="btn-primary"
         onClick={() => void startAuto()}
         disabled={appState.playback === "auto_running"}
       >
         自動ダイヤル
       </button>
-      <button
-        type="button"
-        class="rounded-lg border border-neutral-300 px-4 py-2 text-sm"
-        onClick={stop}
-        data-testid="stop-button"
-      >
+      <button type="button" class="btn-ghost" onClick={stop} data-testid="stop-button">
         停止
       </button>
       <button
         type="button"
-        class="rounded-lg border border-neutral-300 px-4 py-2 text-sm"
+        class="btn-ghost"
         onClick={() => {
           if (appState.playback === "auto_running") {
             sequencer.pause();
@@ -79,7 +74,7 @@ export default function PlaybackControls() {
       </button>
       <button
         type="button"
-        class="rounded-lg border border-neutral-300 px-4 py-2 text-sm"
+        class="btn-ghost"
         onClick={() => {
           if (appState.playback === "auto_paused") {
             sequencer.resume();
@@ -92,7 +87,7 @@ export default function PlaybackControls() {
       </button>
       <button
         type="button"
-        class="rounded-lg border border-neutral-300 px-4 py-2 text-sm"
+        class="btn-ghost"
         onClick={() => {
           stop();
           void startAuto();

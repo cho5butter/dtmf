@@ -9,7 +9,10 @@ export default function NumberInput() {
 
   return (
     <div class="mb-4">
-      <label class="mb-1 block text-sm font-medium" for="phone-input">
+      <label
+        class="mb-2 block text-xs font-medium tracking-wide text-zinc-400 uppercase"
+        for="phone-input"
+      >
         電話番号
       </label>
       <input
@@ -17,19 +20,20 @@ export default function NumberInput() {
         type="tel"
         inputmode="tel"
         autocomplete="tel"
-        class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-lg tracking-wider"
+        class="display-field"
+        placeholder="番号を入力"
         value={appState.raw}
         onInput={handleInput}
         aria-label="電話番号入力"
         aria-describedby="intl-prefix-note"
         data-testid="phone-input"
       />
-      <p id="intl-prefix-note" class="mt-1 text-xs text-neutral-500">
+      <p id="intl-prefix-note" class="hint-text mt-2">
         {appState.hadInternationalPrefix
           ? "先頭の + は表示のみで、DTMF では鳴らされません。"
-          : "0-9、*、# のみ再生されます。"}
+          : "0-9、*、# のみ。キーは押下でため、離すと再生します。"}
       </p>
-      <div class="mt-2 font-mono text-sm" aria-live="polite">
+      <div class="digit-preview mt-3 min-h-[1.25rem] text-base" aria-live="polite">
         {appState.display.split("").map((char, idx) => (
           <span data-active={appState.currentDigitIdx === idx ? "true" : undefined}>{char}</span>
         ))}

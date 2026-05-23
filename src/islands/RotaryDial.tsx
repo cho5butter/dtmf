@@ -4,17 +4,19 @@ import type { DtmfKey } from "../lib/dtmf/frequencyMap";
 import { isDtmfKey } from "../lib/dtmf/frequencyMap";
 import { digitToAngle, fingerStopAngle, returnAngle } from "../lib/dtmf/rotaryAngle";
 import { useServices } from "../lib/state/context";
-import { appState } from "../lib/state/store";
+import { usePadDialRelease, useRotaryDialRelease } from "./useDialRelease";
 
 const MAX_QUEUE = 20;
 const RETURN_MS = 400;
 
 export default function RotaryDial() {
   const { engine } = useServices();
+  const { startSession, recordDigit, releaseSession } = useRotaryDialRelease(engine);
   const [rotation, setRotation] = createSignal(0);
   const [queueFull, setQueueFull] = createSignal(false);
   let queue: string[] = [];
   let processing = false;
+  let fingerDown = false;
   let returnTimer: ReturnType<typeof setTimeout> | undefined;
 
   const processQueue = async () => {
@@ -28,9 +30,12 @@ export default function RotaryDial() {
     const start = digitToAngle(digit === "0" ? "0" : digit);
     const stop = fingerStopAngle(start);
     setRotation(stop);
-    returnTimer = setTimeout(async () => {
+    returnTimer = setTimeout(() => {
       setRotation(returnAngle(stop));
-      await engine.playTone(digit as DtmfKey, appState.settings.toneDurationMs);
+      recordDigit(digit);
+      if (!fingerDown) {
+        void releaseSession();
+      }
       processing = false;
       setQueueFull(queue.length >= MAX_QUEUE);
       void processQueue();
@@ -63,18 +68,36 @@ export default function RotaryDial() {
   });
 
   const auxKeys: DtmfKey[] = ["*", "#"];
+  const { onKeyDown, onKeyUp } = usePadDialRelease(engine);
 
   return (
-    <div data-testid="rotary-dial">
+    <div
+      data-testid="rotary-dial"
+      onPointerDown={() => {
+        if (!fingerDown) startSession();
+        fingerDown = true;
+      }}
+      onPointerUp={() => {
+        fingerDown = false;
+        void releaseSession();
+      }}
+      onPointerCancel={() => {
+        fingerDown = false;
+        void releaseSession();
+      }}
+    >
+      <p class="hint-text mb-3 text-center">
+        ダイヤルを回して数字を記録し、指を離すとためた分が鳴ります
+      </p>
       <div
-        class="relative mx-auto mb-4 flex h-56 w-56 items-center justify-center rounded-full border-4 border-zinc-800 bg-zinc-200"
+        class="rotary-disc relative mx-auto mb-4 flex h-56 w-56 items-center justify-center rounded-full"
         style={{ transform: `rotate(${rotation()}deg)` }}
       >
         <For each={["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]}>
           {(digit) => (
             <button
               type="button"
-              class="absolute h-10 w-10 rounded-full bg-zinc-800 text-sm text-white"
+              class="rotary-hole absolute flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium"
               style={{
                 transform: `rotate(${digitToAngle(digit)}deg) translateY(-90px)`,
               }}
@@ -82,7 +105,7 @@ export default function RotaryDial() {
               data-digit={digit}
               disabled={queueFull()}
               aria-disabled={queueFull()}
-              onClick={() => dialDigit(digit)}
+              onPointerDown={() => dialDigit(digit)}
             >
               {digit}
             </button>
@@ -94,13 +117,11 @@ export default function RotaryDial() {
           {(key) => (
             <button
               type="button"
-              class="dtmf-key min-w-[44px] rounded-lg bg-zinc-800 px-4 py-2 text-white"
+              class="dtmf-key min-w-[52px] px-4 py-2 text-base"
               aria-label={`補助キー ${key}`}
-              onPointerDown={() => {
-                void engine.ensureContext();
-                engine.pressKey(key);
-              }}
-              onPointerUp={() => engine.releaseKey()}
+              onPointerDown={(e) => onKeyDown(key, e)}
+              onPointerUp={(e) => void onKeyUp(key, e)}
+              onPointerCancel={(e) => void onKeyUp(key, e)}
             >
               {key}
             </button>

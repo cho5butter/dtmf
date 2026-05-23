@@ -155,7 +155,8 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
     },
 
     setVolume(v: number) {
-      volume = Math.max(0, Math.min(1, v));
+      const linear = Math.max(0, Math.min(1, v));
+      volume = linear * linear;
       if (masterGain) masterGain.gain.value = volume;
     },
 

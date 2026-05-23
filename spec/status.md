@@ -7,13 +7,13 @@
 ## 現在フェーズ
 
 **フェーズ**: 実装
-**ステータス**: 計画1〜15および脆弱性レビュー完了（品質ゲート PASS）
+**ステータス**: 計画 (Phase 2) 承認完了。実装フェーズ開始。
 
 ```
 [x] フェーズ1: 要件定義
 [x] フェーズ2: 設計
 [x] フェーズ3: 計画
-[x] フェーズ4: 実装
+[/] フェーズ4: 実装
 ```
 
 ## フェーズ履歴
@@ -24,19 +24,23 @@
 | 設計 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/design.md` 初稿作成。PR #2 にてユーザー指示「承認します」で承認 |
 | 計画 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/plan.md` 初稿作成（計画1〜15 + 最終計画「脆弱性レビュー」）。PR #3 にてユーザー指示「承認します」で承認 |
 | 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS |
+| 要件定義 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | UI/UX大刷新とバグ修正の追加要件定義。ユーザー指示「承認」で承認 |
+| 設計 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | デザイン・UX大刷新のための設計完了。ユーザーの「はい」指示で承認 |
+| 計画 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | 実装計画完了。ユーザーの「承認ちます」指示で承認 |
+| 実装 (Phase 2) | 2026-05-23 | — | Gemini 3.5 Flash | 計画16〜21および最終計画の実装・検証 |
 
 ## 直近の状況
 
 **最後に実施したこと**:
-- 計画1〜15を順次実装（Astro 5 + Solid + Tailwind v4 + Bun + Biome、ロジック層 TDD、Solid アイランド、E2E/axe/size-limit、GitHub Actions/Pages）
-- `bash scripts/quality-gate.sh` が PASS（クライアント JS gzip 約 15.8 KB / 上限 100 KB）
-- `spec/plan.md` の全チェックボックスを `[x]` に更新
-- 脆弱性レビュー結果を `spec/plan.md` 末尾に記録
+- UI をミニマルなダークダイヤラー風に全面刷新（Phone 風レイアウト・セグメントモード・ガラスパネル）
+- **ためて解放** UX: パッドは押下で番号記録のみ、離したときに DTMF 再生。回転盤はダイヤル完了で記録、指を離すとためた桁を順再生
+- `client:only="solid-js"`、`dialBuffer` / `playDigitSequence`、音量 v² カーブを実装
+- `bash scripts/quality-gate.sh` PASS、E2E（a11y 含む）chromium で確認
 
 **次のアクション**:
-1. PR 作成・GitHub Pages 初回デプロイ（`main` push で `pages.yml` が動作）
-2. 実機（iOS Safari）での AudioContext / 自動ダイヤルスモーク確認
-3. Astro 5 系のセキュリティパッチ公開後に依存更新を検討（`bun audit` 参照）
+1. 計画16〜21の `spec/plan.md` チェックボックス更新（ユーザー合意後）
+2. 実機（iOS Safari）でためて解放・回転盤の操作確認
+3. PR 作成・GitHub Pages デプロイ
 
 **ブロッカー・懸念事項**:
 - `bun audit` で Astro 5.18.1 に moderate/low 2件（静的サイト・`define:vars` 未使用・Server Islands 未使用のため実害リスクは低と判断、詳細は脆弱性レビュー欄）
