@@ -30,8 +30,11 @@
 **最後に実施したこと**:
 - PR #21（CI 修正）含む全 8 PR をマージ（CI から E2E を分離・Dependabot で各依存を更新）
 - 依存更新後の構成: astro 6.3.6 / @astrojs/solid-js 6.0.1 / solid-js 1.9.13 / typescript 6.0.3 / tailwindcss 4.3.0 / @tailwindcss/vite 4.3.0 / @playwright/test 1.60.0
-- 各 PR で `bash scripts/quality-gate.sh` PASS を確認した上でマージ
-- `main` への push により `pages.yml` が起動し GitHub Pages にデプロイ
+- GitHub Pages の Source を `Deploy from branch` → `GitHub Actions` に変更（Jekyll 誤判定回避）
+- CI ワークフローを lint/build/test 個別ステップに分割し失敗箇所を切り分け可能に
+- `oven-sh/setup-bun@v2` の `bun-version` を `1.3.11` に固定（latest 解決ぶれ対策）
+- `pages.yml` のビルドステップに失敗時アノテーション出力（`::error::` + tail ログ）を追加（PR #23 経由）
+- `main` への push で `Deploy GitHub Pages` ワークフローが成功し GitHub Pages にデプロイ
 
 **次のアクション**:
 1. 本番 URL（GitHub Pages）での自動ダイヤルスモーク確認
