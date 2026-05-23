@@ -10,7 +10,7 @@
 :root {
   --ink: #0a0a0a;
   --paper: #f2efe6;
-  --signal: #ff3b30;
+  --signal: #b00020;
   --ink-50: #6b6b68;
 
   --font-sans:
@@ -130,7 +130,7 @@ button {
 
 /* PhoneApp root — flat grid, ordered via grid-template-areas
    Mobile (< 1024px): display → mode → dial → transport → visualizer → settings → details
-   PC (≥ 1024px):   left col (display / transport / visualizer / settings / details)
+   PC (≥ 1024px):   left col (transport / display / visualizer / settings / details)
                     right col (mode / dial spanning rows) */
 
 .phone-app {
@@ -181,8 +181,8 @@ button {
     grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
     grid-template-areas:
       "banner     banner"
-      "display    mode"
-      "transport  dial"
+      "transport  mode"
+      "display    dial"
       "visualizer dial"
       "settings   dial"
       "details    dial";
@@ -274,6 +274,8 @@ button {
 }
 
 .display__screen {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   min-height: 96px;
@@ -281,21 +283,23 @@ button {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  font-size: clamp(2rem, 9vw, 3.5rem);
-  letter-spacing: 0.08em;
-  line-height: 1;
+  font-size: clamp(1.5rem, 7vw, 2.75rem);
+  letter-spacing: 0.03em;
+  line-height: 1.15;
   text-align: right;
   color: var(--ink);
   background: var(--paper);
   border: var(--hair);
-  overflow-x: auto;
-  white-space: nowrap;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 @media (min-width: 1024px) {
   .display__screen {
-    min-height: 140px;
-    font-size: 4.5rem;
+    min-height: 112px;
+    font-size: clamp(1.5rem, 2.8vw, 2.75rem);
     padding: var(--s-4) var(--s-6);
   }
 }
@@ -328,6 +332,7 @@ button {
   background: transparent;
   cursor: text;
   font-size: 16px; /* iOS zoom 抑制 */
+  pointer-events: none;
 }
 
 .display__hint {
@@ -339,11 +344,44 @@ button {
   text-transform: uppercase;
 }
 
+.display__history {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  border: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.display__history-btn {
+  appearance: none;
+  border: var(--hair);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: var(--s-2);
+  min-height: 36px;
+  cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.display__history-btn:hover,
+.display__history-btn:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* ─────────── Mode Picker ─────────── */
 
 .mode-pick {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0;
   border: var(--hair);
   background: var(--paper);
@@ -467,31 +505,6 @@ button {
   }
 }
 
-/* Modern variant — inverted colors */
-.keypad--modern .key {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
-  box-shadow: var(--shadow-hard);
-}
-
-.keypad--modern .key:hover {
-  background: var(--ink-50);
-  color: var(--paper);
-}
-
-.keypad--modern .key:active,
-.keypad--modern .key[data-active="true"] {
-  background: var(--signal);
-  color: var(--paper);
-  border-color: var(--signal);
-}
-
-.keypad--modern .key__cap {
-  color: var(--paper);
-  opacity: 0.6;
-}
-
 /* Rotary — keep circle, remove gradients */
 
 .rotary {
@@ -578,8 +591,7 @@ button {
 
 .transport {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 96px), 1fr));
   gap: var(--s-2);
   border: var(--hair);
   background: var(--paper);
@@ -588,24 +600,15 @@ button {
 
 @media (min-width: 600px) {
   .transport {
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    grid-template-rows: auto;
+    grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
   }
 }
 
 .transport-sticky {
-  position: sticky;
-  bottom: 0;
+  position: static;
   z-index: 50;
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--s-3));
+  padding-bottom: var(--s-3);
   background: var(--paper);
-}
-
-@media (min-width: 1024px) {
-  .transport-sticky {
-    position: static;
-    padding-bottom: var(--s-3);
-  }
 }
 
 .t-btn {
@@ -635,7 +638,8 @@ button {
     color 0.05s linear;
   border-radius: 0;
   grid-column: span 1;
-  overflow: hidden;
+  overflow: visible;
+  flex-wrap: wrap;
 }
 
 /* Mobile: hide labels on secondary transport buttons; icons remain */
@@ -690,6 +694,9 @@ button {
 
 .t-btn__label {
   font-size: 12px;
+  letter-spacing: 0.04em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .t-btn__kbd {

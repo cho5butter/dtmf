@@ -93,6 +93,23 @@ export default function NumberInput() {
           ? "先頭の + は表示のみ"
           : "キーを押してためる / 離すと鳴る / Enter で全再生"}
       </p>
+      <Show when={appState.history.length > 0}>
+        <fieldset class="display__history">
+          <legend class="sr-only">再生履歴</legend>
+          <For each={appState.history}>
+            {(item) => (
+              <button
+                type="button"
+                class="display__history-btn"
+                aria-label={`履歴から ${item} を入力`}
+                onClick={() => setInput(item)}
+              >
+                {item}
+              </button>
+            )}
+          </For>
+        </fieldset>
+      </Show>
     </section>
   );
 }

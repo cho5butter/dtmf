@@ -6,7 +6,7 @@ export async function waitForPhoneAppHydrated(page: Page): Promise<void> {
   await page.getByTestId("mode-switcher").waitFor({ state: "visible" });
   await page
     .getByTestId("mode-switcher")
-    .getByRole("button", { name: "モダン", exact: true })
+    .getByRole("button", { name: "回転", exact: true })
     .waitFor({
       state: "visible",
     });

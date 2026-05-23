@@ -1,4 +1,6 @@
-export type UiMode = "retro" | "modern" | "rotary";
+import { normalizePhoneNumber } from "../input/normalizer";
+
+export type UiMode = "retro" | "rotary";
 
 export interface PersistedSettings {
   toneDurationMs: number;
@@ -17,7 +19,10 @@ export const STORAGE_KEYS = {
   schemaVersion: "dtmf:schemaVersion",
   mode: "dtmf:mode",
   settings: "dtmf:settings",
+  history: "dtmf:history",
 } as const;
+
+const MAX_HISTORY = 5;
 
 const DEFAULT_SETTINGS: PersistedSettings = {
   toneDurationMs: 150,
@@ -50,13 +55,13 @@ export function loadPersistedState(): PersistedState {
       return { ...DEFAULT_PERSISTED, settings: { ...DEFAULT_SETTINGS } };
     }
 
-    const mode = storage.getItem(STORAGE_KEYS.mode) as UiMode | null;
+    const mode = storage.getItem(STORAGE_KEYS.mode);
     const settingsRaw = storage.getItem(STORAGE_KEYS.settings);
     const settings = settingsRaw
       ? (JSON.parse(settingsRaw) as PersistedSettings)
       : { ...DEFAULT_SETTINGS };
 
-    if (!["retro", "modern", "rotary"].includes(mode ?? "")) {
+    if (!["retro", "rotary"].includes(mode ?? "")) {
       return { ...DEFAULT_PERSISTED, settings: clampSettings(settings) };
     }
 
@@ -103,4 +108,43 @@ export function saveSettings(settings: PersistedSettings): void {
   } catch {
     /* ignore */
   }
+}
+
+export function loadDialHistory(): string[] {
+  const storage = getStorage();
+  if (!storage) return [];
+  try {
+    const raw = storage.getItem(STORAGE_KEYS.history);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => normalizePhoneNumber(value).display)
+      .filter((value) => normalizePhoneNumber(value).digits.length > 0)
+      .slice(0, MAX_HISTORY);
+  } catch {
+    return [];
+  }
+}
+
+export function rememberDialHistory(value: string): string[] {
+  const normalized = normalizePhoneNumber(value);
+  if (!normalized.digits) return loadDialHistory();
+
+  const current = loadDialHistory();
+  const next = [
+    normalized.display,
+    ...current.filter((item) => normalizePhoneNumber(item).digits !== normalized.digits),
+  ].slice(0, MAX_HISTORY);
+
+  const storage = getStorage();
+  if (storage) {
+    try {
+      storage.setItem(STORAGE_KEYS.history, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  }
+  return next;
 }

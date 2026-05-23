@@ -4,6 +4,7 @@ import {
   appState,
   dismissToast,
   pushToast,
+  recordPlaybackHistory,
   setCurrentDigitIdx,
   setInput,
   setMode,
@@ -26,8 +27,8 @@ describe("appStore", () => {
   });
 
   test("setMode persists to localStorage", () => {
-    setMode("modern");
-    expect(localStorage.getItem(STORAGE_KEYS.mode)).toBe("modern");
+    setMode("rotary");
+    expect(localStorage.getItem(STORAGE_KEYS.mode)).toBe("rotary");
     expect(localStorage.getItem(STORAGE_KEYS.schemaVersion)).toBe("1");
   });
 
@@ -41,6 +42,13 @@ describe("appStore", () => {
     setInput("09012345678");
     expect(localStorage.getItem("dtmf:raw")).toBeNull();
     expect(localStorage.getItem("dtmf:digits")).toBeNull();
+  });
+
+  test("recordPlaybackHistory stores the current normalized display", () => {
+    setInput("090-1234-5678");
+    recordPlaybackHistory();
+    expect(appState.history).toEqual(["09012345678"]);
+    expect(localStorage.getItem(STORAGE_KEYS.history)).toContain("09012345678");
   });
 
   test("toast lifecycle", () => {

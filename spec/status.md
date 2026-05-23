@@ -42,37 +42,29 @@
 ## 直近の状況
 
 **最後に実施したこと**:
-- Phase 3 実装の UI 不具合修正（ブランチ `claude/trusting-mayer-2FUs5`）:
-  - `PhoneApp.tsx` の `col-left`/`col-right` 入れ子を撤廃し `.phone-app` 直下に flat 配置
-  - `global.css` の `.phone-app` を `grid-template-areas` 化（モバイル: display→mode→dial→transport→visualizer→settings→details / PC: 左 display+transport+config+details / 右 mode+dial）
-  - `.t-btn` に `min-width: 0` / `overflow: hidden` 追加、モバイル(< 600px)で PRIMARY 以外のラベル非表示 (アイコン強調) でボタンはみ出しを解消
-  - 品質ゲート: biome PASS / astro build PASS / bun test 53 件全 PASS
-- Phase 3 設計（P3-1〜P3-8）を `spec/design.md` に追記（3色トークン・PC/スマホレイアウトグリッド・Display/Brand/Mode Picker/Transport/Panel/Visualizer 各コンポーネント仕様）
-- Phase 3 計画（P3-A〜P3-H）を `spec/plan.md` に追記
-- `src/styles/global.css` を完全書き換え（旧 `.app-shell` / `.page` / `.dialer` / `.dial-section` / `.keypad` / `.glass-panel` / `theme-*` / `--accent` / `linear-gradient` 全廃）
-- `src/layouts/Base.astro` から `.app-shell` クラス除去
-- `src/pages/index.astro` を `<main class="stage">` ベースに書き換え（Brand ヘッダ静的レンダリング）
-- `PhoneApp.tsx` を 2カラム grid 内部レイアウト + Enter/Esc 全域ショートカット対応に再構築
-- `NumberInput.tsx` を Display コンポーネント化（output 主役・隠し input・状態ラベル INPUT/PLAYING・桁カウンタ N/64・3段階桁表現）
-- `PlaybackControls.tsx` を Transport（▶ PLAY ハードシャドウ + `<kbd>` 表記）に書き換え
-- `ModeSwitcher.tsx` をブルータリスト反転トグルに書き換え（aria-label でテスト互換維持）
-- `DialPad.tsx` / `ModernPad.tsx` を正方形キー + ハードシャドウ + キーキャップ表記化
-- `RotaryDial.tsx` のグラデを排除し solid `--paper` + 円形枠線に
-- `Visualizer.tsx` のグラデと shadowBlur を排除し `--signal` 一色に
-- `SettingsPanel.tsx` / `DetailPanel.tsx` / `Toast.tsx` / `Footer.astro` をブルータリスト化
-- `ServicesContext` に `runAutoPlay` / `stopAll` を追加し、キーボード Enter から再生発火可能に
-- 品質ゲート: `bun biome ci .` PASS（warning のみ）/ `bun astro build` PASS（17 KB gzip） / `bun test` 53 件全 PASS
+- `origin/main` を fast-forward で取り込み（`790c696`）後、ユーザー指定の UI 修正を実施
+- PC レイアウトで Player（再生操作）と入力表示の縦位置を入れ替え（Player → Input の順）
+- 電話番号表示を横スクロールではなく折り返し表示に変更し、長い番号でも表示枠内に収めるよう調整
+- 再生ボタン群のグリッドを可変幅化し、文字切れ・潰れ・モバイルでの重なりを解消（sticky 解除）
+- モダンモードを削除（モードは `retro` / `rotary` の 2 種。既存保存値 `modern` は `retro` にフォールバック）
+- 回転ダイヤルは各入力ごとに 0 度へ戻してから次の処理に進むよう修正
+- 自動再生時に直近 5 件の履歴をブラウザ内 `localStorage` に保存し、入力表示下から再入力できるよう追加（Cookie は送信リスクがあるため不採用）
+- アクセント色を AA コントラストに調整し、axe の color-contrast 違反を解消
+- TDD: 履歴保存・モダン保存値フォールバック・回転リセット・E2E 履歴/モード切替のテストを追加/更新
+- 品質ゲート: `bash scripts/quality-gate.sh` PASS（56 tests / size-limit 17.05 KB gzip）
+- E2E: `bun run test:e2e` PASS（Chromium / Firefox / WebKit、30 tests）
+- Playwright 目視確認: PC/モバイルで横 overflow なし、番号表示の横スクロールなし、モバイルで Player と DialPad の重なりなし
 
 **次のアクション**:
-1. ブランチ `claude/trusting-mayer-2FUs5` の UI 修正 (Player↔Dial 順序 / ボタンはみ出し) をユーザーが PR プレビューで確認
-2. 問題なければマージ → GitHub Pages へ自動デプロイ
-3. 残課題があれば Phase 3 (v2) として追加要件化
+1. ユーザーがローカル `http://127.0.0.1:4321/dtmf/` で UI を確認
+2. 問題なければコミット・PR 作成
+3. 残課題があれば追加修正（必要に応じて spec へ反映）
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
 - `bun audit` で Astro 5.18.1 に moderate/low 2件（静的サイトのため実害リスクは低）
-- スクリーンショット撮影が remote env のネットワーク制約で不可の場合あり。動作確認はローカルまたは PR プレビューに依存
-- Phase 2 実装 (`[/]`) は未完だが、Phase 3 のデザイン再構築で上書きされる前提。Phase 2 のチェックボックスは Phase 3 実装完了時にまとめて更新する方針
+- 今回の「モダンモード削除」「電話番号履歴」は既存 spec の 3 モード構成・入力非永続化方針との差分があるため、必要なら後続で要件/設計へ正式反映する
+- Cookie に電話番号を保存するとリクエスト送信され得るため、NFR-002（外部送信しない）に合わせて `localStorage` 保存に限定した
 
 ## プロジェクト初期化チェックリスト
 

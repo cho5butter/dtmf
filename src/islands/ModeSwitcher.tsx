@@ -5,8 +5,7 @@ import { appState, setMode } from "../lib/state/store";
 
 const MODES: { id: UiMode; label: string; code: string }[] = [
   { id: "retro", label: "レトロ", code: "01" },
-  { id: "modern", label: "モダン", code: "02" },
-  { id: "rotary", label: "回転", code: "03" },
+  { id: "rotary", label: "回転", code: "02" },
 ];
 
 function ModeButton(props: { id: UiMode; label: string; code: string }) {
@@ -19,7 +18,7 @@ function ModeButton(props: { id: UiMode; label: string; code: string }) {
       aria-label={props.label}
       onClick={() => setMode(props.id)}
     >
-      <span aria-hidden="true" style="opacity: 0.5; margin-right: 6px; font-weight: 500;">
+      <span aria-hidden="true" style="margin-right: 6px; font-weight: 500;">
         {props.code}
       </span>
       <span aria-hidden="true">{props.label}</span>
