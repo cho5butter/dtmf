@@ -42,6 +42,11 @@
 ## 直近の状況
 
 **最後に実施したこと**:
+- Phase 3 実装の UI 不具合修正（ブランチ `claude/trusting-mayer-2FUs5`）:
+  - `PhoneApp.tsx` の `col-left`/`col-right` 入れ子を撤廃し `.phone-app` 直下に flat 配置
+  - `global.css` の `.phone-app` を `grid-template-areas` 化（モバイル: display→mode→dial→transport→visualizer→settings→details / PC: 左 display+transport+config+details / 右 mode+dial）
+  - `.t-btn` に `min-width: 0` / `overflow: hidden` 追加、モバイル(< 600px)で PRIMARY 以外のラベル非表示 (アイコン強調) でボタンはみ出しを解消
+  - 品質ゲート: biome PASS / astro build PASS / bun test 53 件全 PASS
 - Phase 3 設計（P3-1〜P3-8）を `spec/design.md` に追記（3色トークン・PC/スマホレイアウトグリッド・Display/Brand/Mode Picker/Transport/Panel/Visualizer 各コンポーネント仕様）
 - Phase 3 計画（P3-A〜P3-H）を `spec/plan.md` に追記
 - `src/styles/global.css` を完全書き換え（旧 `.app-shell` / `.page` / `.dialer` / `.dial-section` / `.keypad` / `.glass-panel` / `theme-*` / `--accent` / `linear-gradient` 全廃）
@@ -59,9 +64,9 @@
 - 品質ゲート: `bun biome ci .` PASS（warning のみ）/ `bun astro build` PASS（17 KB gzip） / `bun test` 53 件全 PASS
 
 **次のアクション**:
-1. ローカル動作確認（必要に応じて Playwright E2E 実行）
-2. ブランチ `claude/eloquent-heisenberg-Gzt5X` をコミット & プッシュ、PR draft 作成
-3. ユーザーレビュー → マージ後 GitHub Pages へ自動デプロイ
+1. ブランチ `claude/trusting-mayer-2FUs5` の UI 修正 (Player↔Dial 順序 / ボタンはみ出し) をユーザーが PR プレビューで確認
+2. 問題なければマージ → GitHub Pages へ自動デプロイ
+3. 残課題があれば Phase 3 (v2) として追加要件化
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
