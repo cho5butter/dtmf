@@ -6,14 +6,18 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装
-**ステータス**: 計画1〜15および脆弱性レビュー完了（品質ゲート PASS）
+**フェーズ**: 要件定義（v2 リビジョン）
+**ステータス**: UI/UX 監査の結果、致命的バグ群と「ダサい・殆ど動かない」UX を確認。v1 実装は完了済みだが、v2 として要件を改訂中。
 
 ```
-[x] フェーズ1: 要件定義
-[x] フェーズ2: 設計
-[x] フェーズ3: 計画
-[x] フェーズ4: 実装
+[x] フェーズ1: 要件定義(v1)
+[x] フェーズ2: 設計(v1)
+[x] フェーズ3: 計画(v1)
+[x] フェーズ4: 実装(v1)
+[ ] フェーズ1: 要件定義(v2) ← 現在
+[ ] フェーズ2: 設計(v2)
+[ ] フェーズ3: 計画(v2)
+[ ] フェーズ4: 実装(v2)
 ```
 
 ## フェーズ履歴
@@ -24,23 +28,25 @@
 | 設計 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/design.md` 初稿作成。PR #2 にてユーザー指示「承認します」で承認 |
 | 計画 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/plan.md` 初稿作成（計画1〜15 + 最終計画「脆弱性レビュー」）。PR #3 にてユーザー指示「承認します」で承認 |
 | 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS |
+| 要件定義(v2) | 2026-05-23 | — | Claude Code (Opus 4.7) | UI/UX 監査でリリース版に致命的バグ＋UX 不足を発見、`requirements.md` に F-011〜F-013（システム / Bauhaus テイストのミニマル刷新）と B1〜B8（バグ修正）を追記 |
 
 ## 直近の状況
 
 **最後に実施したこと**:
-- PR #21（CI 修正）含む全 8 PR をマージ（CI から E2E を分離・Dependabot で各依存を更新）
-- 依存更新後の構成: astro 6.3.6 / @astrojs/solid-js 6.0.1 / solid-js 1.9.13 / typescript 6.0.3 / tailwindcss 4.3.0 / @tailwindcss/vite 4.3.0 / @playwright/test 1.60.0
-- 各 PR で `bash scripts/quality-gate.sh` PASS を確認した上でマージ
-- `main` への push により `pages.yml` が起動し GitHub Pages にデプロイ
+- ブランチ `claude/ui-ux-redesign-audit-bZT6s` にて UI/UX 監査を実施
+- 致命バグ B1（キーパッド配列違反）/ B2（リスナ未解除）/ B3/B4（手動キー押下が入力欄に反映されない）/ B5（ポインタ押下時にビジュアライザ非稼働）/ B6（View Transitions 未実装）/ B7（iOS AudioContext 不確実）/ B8（pause で未来トーンが残る）を確認
+- 配色/レイアウト/タイポ/モード差分の UX 課題を洗い出し
+- `spec/requirements.md` に「v2 リビジョン: UI 刷新（システム/Bauhaus 風）+ バグ修正」を追記
 
 **次のアクション**:
-1. 本番 URL（GitHub Pages）での自動ダイヤルスモーク確認
-2. 実機（iOS Safari）での AudioContext 動作確認
-3. E2E（playwright）はローカル/手動運用に分離済み — 必要に応じ別ワークフロー化を検討
+1. `spec/requirements.md` v2 追記分のユーザー承認を得る
+2. 承認後、設計フェーズ(v2)で `spec/design.md` を改訂し、デザイントークン・コンポーネント仕様・バグ修正方針を定義
+3. 計画フェーズ(v2)で TDD で進められるタスク分割
+4. 実装フェーズ(v2)
 
 **ブロッカー・懸念事項**:
-- E2E は CI から外したのでローカル `RUN_E2E=1 bash scripts/test.sh` で実行する運用
-- コンポーネントテストは Bun の JSX 制約のため DOM レンダリングではなくストア/エンジン統合テストに置換（E2E で UI を担保）
+- v1 実装は GitHub Pages に既にデプロイ済み。v2 マージ時に再デプロイされる
+- スクリーンショット撮影が remote env のネットワーク制約で不可（Playwright Chromium DL 失敗）。動作確認はローカルまたは PR プレビューに依存
 
 ## プロジェクト初期化チェックリスト
 
