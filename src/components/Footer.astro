@@ -2,18 +2,19 @@
 const base = import.meta.env.BASE_URL;
 ---
 
-<footer class="mx-auto max-w-lg px-4 py-8 text-sm text-neutral-500">
-  <p class="mb-4 leading-relaxed">
-    本ツールは合法的なダイヤル支援・学習・娯楽用途を目的としています。フリーキング、不正な電話会社サービス操作、第三者への嫌がらせ電話の補助等への利用を禁止します。
+<footer class="mt-8 text-xs leading-relaxed text-zinc-500">
+  <p class="mb-3">
+    合法的なダイヤル支援・学習用途向けです。不正利用は禁止します。
   </p>
   <p>
     <a
-      class="text-cyan-600 underline hover:text-cyan-500"
+      class="text-blue-400 hover:text-blue-300"
       href="https://github.com/cho5butter/dtmf"
       rel="noopener noreferrer"
     >
-      GitHub リポジトリ
+      GitHub
     </a>
-    · 配信: <a class="underline" href={`${base}`}>DTMF Web Dialer</a>
+    ·
+    <a class="text-blue-400 hover:text-blue-300" href={base}>DTMF Web Dialer</a>
   </p>
 </footer>

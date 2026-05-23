@@ -3,24 +3,20 @@ import { For } from "solid-js";
 import { DTMF_KEYS, type DtmfKey } from "../lib/dtmf/frequencyMap";
 import { useServices } from "../lib/state/context";
 import { appState } from "../lib/state/store";
+import { usePadDialRelease } from "./useDialRelease";
 
 export default function ModernPad() {
   const { engine } = useServices();
-
-  const press = (key: DtmfKey) => {
-    void engine.ensureContext().catch(() => {});
-    engine.pressKey(key);
-  };
-
-  const release = () => engine.releaseKey();
+  const { onKeyDown, onKeyUp } = usePadDialRelease(engine);
 
   return (
     <div class="grid grid-cols-3 gap-3" data-testid="modern-pad">
+      <p class="hint-text col-span-3 mb-1">押して数字をため、離すとトーンが鳴ります</p>
       <For each={DTMF_KEYS}>
         {(key) => (
           <button
             type="button"
-            class="dtmf-key rounded-2xl bg-neutral-800 text-lg font-medium text-cyan-300 hover:bg-neutral-700"
+            class="dtmf-key"
             aria-label={`ダイヤルキー ${key}`}
             data-key={key}
             data-active={
@@ -28,13 +24,9 @@ export default function ModernPad() {
                 ? "true"
                 : undefined
             }
-            onPointerDown={(e) => {
-              e.preventDefault();
-              press(key);
-            }}
-            onPointerUp={release}
-            onPointerLeave={release}
-            onPointerCancel={release}
+            onPointerDown={(e) => onKeyDown(key, e)}
+            onPointerUp={(e) => void onKeyUp(key, e)}
+            onPointerCancel={(e) => void onKeyUp(key, e)}
           >
             {key}
           </button>

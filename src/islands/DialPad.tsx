@@ -3,6 +3,7 @@ import { For } from "solid-js";
 import { DTMF_KEYS, type DtmfKey } from "../lib/dtmf/frequencyMap";
 import { useServices } from "../lib/state/context";
 import { appState } from "../lib/state/store";
+import { usePadDialRelease } from "./useDialRelease";
 
 const LABELS: Record<DtmfKey, string> = {
   "1": "1",
@@ -21,21 +22,16 @@ const LABELS: Record<DtmfKey, string> = {
 
 export default function DialPad() {
   const { engine } = useServices();
-
-  const press = (key: DtmfKey) => {
-    void engine.ensureContext().catch(() => {});
-    engine.pressKey(key);
-  };
-
-  const release = () => engine.releaseKey();
+  const { onKeyDown, onKeyUp } = usePadDialRelease(engine);
 
   return (
-    <div class="grid grid-cols-3 gap-2" data-testid="dial-pad">
+    <div class="grid grid-cols-3 gap-3" data-testid="dial-pad">
+      <p class="hint-text col-span-3 mb-1">押して数字をため、離すとトーンが鳴ります</p>
       <For each={DTMF_KEYS}>
         {(key) => (
           <button
             type="button"
-            class="dtmf-key rounded-xl bg-emerald-800 text-lg font-semibold text-emerald-50 hover:bg-emerald-700"
+            class="dtmf-key"
             aria-label={`ダイヤルキー ${LABELS[key]}`}
             data-key={key}
             data-active={
@@ -43,13 +39,9 @@ export default function DialPad() {
                 ? "true"
                 : undefined
             }
-            onPointerDown={(e) => {
-              e.preventDefault();
-              press(key);
-            }}
-            onPointerUp={release}
-            onPointerLeave={release}
-            onPointerCancel={release}
+            onPointerDown={(e) => onKeyDown(key, e)}
+            onPointerUp={(e) => void onKeyUp(key, e)}
+            onPointerCancel={(e) => void onKeyUp(key, e)}
           >
             {LABELS[key]}
           </button>

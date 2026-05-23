@@ -6,18 +6,18 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 要件定義（v2 リビジョン）
-**ステータス**: UI/UX 監査の結果、致命的バグ群と「ダサい・殆ど動かない」UX を確認。v1 実装は完了済みだが、v2 として要件を改訂中。
+**フェーズ**: 実装（Phase 2）
+**ステータス**: UI/UX 刷新・ためて解放 UX を `fix/ci-biome-astro` で実装済み。`main` 取り込み（CI Bun 固定・デプロイ履歴）とマージコンフリクト解消中。
 
 ```
 [x] フェーズ1: 要件定義(v1)
 [x] フェーズ2: 設計(v1)
 [x] フェーズ3: 計画(v1)
 [x] フェーズ4: 実装(v1)
-[ ] フェーズ1: 要件定義(v2) ← 現在
-[ ] フェーズ2: 設計(v2)
-[ ] フェーズ3: 計画(v2)
-[ ] フェーズ4: 実装(v2)
+[x] フェーズ1: 要件定義(Phase 2)
+[x] フェーズ2: 設計(Phase 2)
+[x] フェーズ3: 計画(Phase 2)
+[/] フェーズ4: 実装(Phase 2)
 ```
 
 ## フェーズ履歴
@@ -27,27 +27,30 @@
 | 要件定義 | 2026-05-20 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/requirements.md` 完成。ユーザー指示「設計を進めて」で承認 |
 | 設計 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/design.md` 初稿作成。PR #2 にてユーザー指示「承認します」で承認 |
 | 計画 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/plan.md` 初稿作成（計画1〜15 + 最終計画「脆弱性レビュー」）。PR #3 にてユーザー指示「承認します」で承認 |
-| 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS。その後 PR #21 等の CI 修正・Dependabot 経由の依存更新（astro 6.3.6 / @astrojs/solid-js 6.0.1 / solid-js 1.9.13 / typescript 6.0.3 / tailwindcss 4.3.0 / @tailwindcss/vite 4.3.0 / @playwright/test 1.60.0）を経て、GitHub Pages の Source を `GitHub Actions` に変更・`oven-sh/setup-bun@v2` を 1.3.11 固定・`pages.yml` に失敗時アノテーション追加（PR #23）し本番デプロイ成功 |
-| 要件定義(v2) | 2026-05-23 | — | Claude Code (Opus 4.7) | UI/UX 監査でリリース版に致命的バグ＋UX 不足を発見、`requirements.md` に F-011〜F-013（システム / Bauhaus テイストのミニマル刷新）と B1〜B8（バグ修正）を追記 |
+| 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS。その後 PR #21 等の CI 修正・Dependabot 経由の依存更新・GitHub Pages 本番デプロイ成功（`main`） |
+| 要件定義 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | UI/UX大刷新とバグ修正の追加要件定義。ユーザー指示「承認」で承認 |
+| 設計 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | デザイン・UX大刷新のための設計完了。ユーザーの「はい」指示で承認 |
+| 計画 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | 実装計画完了。ユーザーの「承認ちます」指示で承認 |
+| 実装 (Phase 2) | 2026-05-23 | — | Cursor Agent | ミニマルUI・ためて解放 UX・`client:only`・品質ゲート PASS |
+| 要件定義(v2 監査) | 2026-05-23 | — | Claude Code (Opus 4.7) | `main` 上で UI/UX 監査（F-011〜F-013 / B1〜B8 追記）。ブランチ実装と統合予定 |
 
 ## 直近の状況
 
 **最後に実施したこと**:
-- ブランチ `claude/ui-ux-redesign-audit-bZT6s` にて UI/UX 監査を実施
-- 致命バグ B1（キーパッド配列違反）/ B2（リスナ未解除）/ B3/B4（手動キー押下が入力欄に反映されない）/ B5（ポインタ押下時にビジュアライザ非稼働）/ B6（View Transitions 未実装）/ B7（iOS AudioContext 不確実）/ B8（pause で未来トーンが残る）を確認
-- 配色/レイアウト/タイポ/モード差分の UX 課題を洗い出し
-- `spec/requirements.md` に「v2 リビジョン: UI 刷新（システム/Bauhaus 風）+ バグ修正」を追記
-- main を取り込み（v1 のデプロイ復旧履歴はフェーズ履歴の実装行へ統合）
+- `origin/main` を `fix/ci-biome-astro` にマージしコンフリクト解消（CI: Bun 1.3.11 固定 + `quality-gate.sh`、UI/UX はブランチ側を採用）
+- UI をミニマルなダークダイヤラー風に全面刷新（Phone 風レイアウト・セグメントモード・ガラスパネル）
+- **ためて解放** UX: パッドは押下で番号記録のみ、離したときに DTMF 再生。回転盤はダイヤル完了で記録、指を離すとためた桁を順再生
+- `client:only="solid-js"`、`dialBuffer` / `playDigitSequence`、音量 v² カーブを実装
 
 **次のアクション**:
-1. `spec/requirements.md` v2 追記分のユーザー承認を得る
-2. 承認後、設計フェーズ(v2)で `spec/design.md` を改訂し、デザイントークン・コンポーネント仕様・バグ修正方針を定義
-3. 計画フェーズ(v2)で TDD で進められるタスク分割
-4. 実装フェーズ(v2)
+1. マージコミットを push し PR を更新
+2. 実機（iOS Safari）でためて解放・回転盤の操作確認
+3. `spec/plan.md` Phase 2 チェックボックス更新（ユーザー合意後）
 
 **ブロッカー・懸念事項**:
-- v1 実装は GitHub Pages に既にデプロイ済み。v2 マージ時に再デプロイされる
-- スクリーンショット撮影が remote env のネットワーク制約で不可（Playwright Chromium DL 失敗）。動作確認はローカルまたは PR プレビューに依存
+- v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
+- `bun audit` で Astro 5.18.1 に moderate/low 2件（静的サイトのため実害リスクは低）
+- スクリーンショット撮影が remote env のネットワーク制約で不可の場合あり。動作確認はローカルまたは PR プレビューに依存
 
 ## プロジェクト初期化チェックリスト
 

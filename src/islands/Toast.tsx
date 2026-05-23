@@ -14,11 +14,11 @@ export default function Toast() {
     <Show when={appState.toast}>
       {(toast) => (
         <div
-          class="fixed right-4 bottom-4 z-50 max-w-sm rounded-lg border px-4 py-3 text-sm shadow-lg"
+          class="fixed right-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-xl backdrop-blur-md"
           classList={{
-            "border-blue-200 bg-blue-50 text-blue-900": toast().kind === "info",
-            "border-amber-200 bg-amber-50 text-amber-900": toast().kind === "warn",
-            "border-red-200 bg-red-50 text-red-900": toast().kind === "error",
+            "border-blue-500/30 bg-blue-500/15 text-blue-100": toast().kind === "info",
+            "border-amber-500/30 bg-amber-500/15 text-amber-100": toast().kind === "warn",
+            "border-red-500/30 bg-red-500/15 text-red-100": toast().kind === "error",
           }}
           role="status"
           aria-live="polite"

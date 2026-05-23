@@ -65,7 +65,7 @@ describe("DtmfEngine", () => {
   test("setVolume updates master gain", async () => {
     const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
     await engine.ensureContext();
-    engine.setVolume(0.25);
+    engine.setVolume(0.5);
     engine.pressKey("0");
     const master = fake.createdNodes.gains[0];
     expect(master?.gain.value).toBe(0.25);

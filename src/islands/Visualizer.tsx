@@ -17,6 +17,12 @@ export default function Visualizer() {
     analyser.getByteTimeDomainData(buffer);
     const { width, height } = canvas;
     ctx.clearRect(0, 0, width, height);
+
+    const gradient = ctx.createLinearGradient(0, 0, width, 0);
+    gradient.addColorStop(0, "#22d3ee");
+    gradient.addColorStop(0.5, "#818cf8");
+    gradient.addColorStop(1, "#e879f9");
+
     ctx.beginPath();
     const sliceWidth = width / buffer.length;
     let x = 0;
@@ -27,9 +33,12 @@ export default function Visualizer() {
       else ctx.lineTo(x, y);
       x += sliceWidth;
     }
-    ctx.strokeStyle = "#0891b2";
+    ctx.strokeStyle = gradient;
     ctx.lineWidth = 2;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#22d3ee";
     ctx.stroke();
+    ctx.shadowBlur = 0;
   };
 
   const loop = () => {
@@ -61,9 +70,9 @@ export default function Visualizer() {
   return (
     <canvas
       id="dtmf-visualizer"
-      class="mt-4 h-24 w-full rounded-lg border border-neutral-200 bg-neutral-900"
+      class="mt-4 h-20 w-full rounded-xl border border-white/10 bg-black/40"
       width="400"
-      height="96"
+      height="80"
       aria-label="音声波形ビジュアライザ"
       data-testid="visualizer"
     />
