@@ -6,14 +6,18 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装
-**ステータス**: 計画 (Phase 2) 承認完了。実装フェーズ開始。
+**フェーズ**: 実装（Phase 2）
+**ステータス**: UI/UX 刷新・ためて解放 UX を `fix/ci-biome-astro` で実装済み。`main` 取り込み（CI Bun 固定・デプロイ履歴）とマージコンフリクト解消中。
 
 ```
-[x] フェーズ1: 要件定義
-[x] フェーズ2: 設計
-[x] フェーズ3: 計画
-[/] フェーズ4: 実装
+[x] フェーズ1: 要件定義(v1)
+[x] フェーズ2: 設計(v1)
+[x] フェーズ3: 計画(v1)
+[x] フェーズ4: 実装(v1)
+[x] フェーズ1: 要件定義(Phase 2)
+[x] フェーズ2: 設計(Phase 2)
+[x] フェーズ3: 計画(Phase 2)
+[/] フェーズ4: 実装(Phase 2)
 ```
 
 ## フェーズ履歴
@@ -23,28 +27,30 @@
 | 要件定義 | 2026-05-20 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/requirements.md` 完成。ユーザー指示「設計を進めて」で承認 |
 | 設計 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/design.md` 初稿作成。PR #2 にてユーザー指示「承認します」で承認 |
 | 計画 | 2026-05-21 | 2026-05-21 | Claude Code (Opus 4.7) | `spec/plan.md` 初稿作成（計画1〜15 + 最終計画「脆弱性レビュー」）。PR #3 にてユーザー指示「承認します」で承認 |
-| 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS |
+| 実装 | 2026-05-21 | — | Cursor Agent | 計画1〜15 + 脆弱性レビュー実施。`bash scripts/quality-gate.sh` PASS。その後 PR #21 等の CI 修正・Dependabot 経由の依存更新・GitHub Pages 本番デプロイ成功（`main`） |
 | 要件定義 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | UI/UX大刷新とバグ修正の追加要件定義。ユーザー指示「承認」で承認 |
 | 設計 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | デザイン・UX大刷新のための設計完了。ユーザーの「はい」指示で承認 |
 | 計画 (Phase 2) | 2026-05-23 | 2026-05-23 | Gemini 3.5 Flash | 実装計画完了。ユーザーの「承認ちます」指示で承認 |
-| 実装 (Phase 2) | 2026-05-23 | — | Gemini 3.5 Flash | 計画16〜21および最終計画の実装・検証 |
+| 実装 (Phase 2) | 2026-05-23 | — | Cursor Agent | ミニマルUI・ためて解放 UX・`client:only`・品質ゲート PASS |
+| 要件定義(v2 監査) | 2026-05-23 | — | Claude Code (Opus 4.7) | `main` 上で UI/UX 監査（F-011〜F-013 / B1〜B8 追記）。ブランチ実装と統合予定 |
 
 ## 直近の状況
 
 **最後に実施したこと**:
+- `origin/main` を `fix/ci-biome-astro` にマージしコンフリクト解消（CI: Bun 1.3.11 固定 + `quality-gate.sh`、UI/UX はブランチ側を採用）
 - UI をミニマルなダークダイヤラー風に全面刷新（Phone 風レイアウト・セグメントモード・ガラスパネル）
 - **ためて解放** UX: パッドは押下で番号記録のみ、離したときに DTMF 再生。回転盤はダイヤル完了で記録、指を離すとためた桁を順再生
 - `client:only="solid-js"`、`dialBuffer` / `playDigitSequence`、音量 v² カーブを実装
-- `bash scripts/quality-gate.sh` PASS、E2E（a11y 含む）chromium で確認
 
 **次のアクション**:
-1. 計画16〜21の `spec/plan.md` チェックボックス更新（ユーザー合意後）
+1. マージコミットを push し PR を更新
 2. 実機（iOS Safari）でためて解放・回転盤の操作確認
-3. PR 作成・GitHub Pages デプロイ
+3. `spec/plan.md` Phase 2 チェックボックス更新（ユーザー合意後）
 
 **ブロッカー・懸念事項**:
-- `bun audit` で Astro 5.18.1 に moderate/low 2件（静的サイト・`define:vars` 未使用・Server Islands 未使用のため実害リスクは低と判断、詳細は脆弱性レビュー欄）
-- コンポーネントテストは Bun の JSX 制約のため DOM レンダリングではなくストア/エンジン統合テストに置換（E2E で UI を担保）
+- v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
+- `bun audit` で Astro 5.18.1 に moderate/low 2件（静的サイトのため実害リスクは低）
+- スクリーンショット撮影が remote env のネットワーク制約で不可の場合あり。動作確認はローカルまたは PR プレビューに依存
 
 ## プロジェクト初期化チェックリスト
 
