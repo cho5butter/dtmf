@@ -5,6 +5,10 @@ import { appState, setInput } from "../lib/state/store";
 const MAX_DIGITS = 64;
 const PLACEHOLDER = "— — — — —";
 
+export function historyItemLabel(index: number): string {
+  return `HISTORY ${String(index + 1).padStart(2, "0")}`;
+}
+
 function statusOf(playback: string): { label: string; state: "input" | "playing" | "done" } {
   if (playback === "auto_running" || playback === "key_held") {
     return { label: "PLAYING", state: "playing" };
@@ -95,16 +99,17 @@ export default function NumberInput() {
       </p>
       <Show when={appState.history.length > 0}>
         <fieldset class="display__history">
-          <legend class="sr-only">再生履歴</legend>
+          <legend class="display__history-title">RECENT DIALS</legend>
           <For each={appState.history}>
-            {(item) => (
+            {(item, idx) => (
               <button
                 type="button"
                 class="display__history-btn"
                 aria-label={`履歴から ${item} を入力`}
                 onClick={() => setInput(item)}
               >
-                {item}
+                <span class="display__history-index">{historyItemLabel(idx())}</span>
+                <span class="display__history-number">{item}</span>
               </button>
             )}
           </For>

@@ -130,8 +130,8 @@ button {
 
 /* PhoneApp root — flat grid, ordered via grid-template-areas
    Mobile (< 1024px): display → mode → dial → transport → visualizer → settings → details
-   PC (≥ 1024px):   left col (transport / display / visualizer / settings / details)
-                    right col (mode / dial spanning rows) */
+   PC (≥ 1024px):   left col (mode / dial)
+                    right col (display / transport / visualizer / settings / details) */
 
 .phone-app {
   display: grid;
@@ -178,14 +178,14 @@ button {
 
 @media (min-width: 1024px) {
   .phone-app {
-    grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+    grid-template-columns: minmax(0, 56fr) minmax(0, 44fr);
     grid-template-areas:
       "banner     banner"
-      "transport  mode"
-      "display    dial"
-      "visualizer dial"
-      "settings   dial"
-      "details    dial";
+      "mode       display"
+      "dial       transport"
+      "dial       visualizer"
+      "dial       settings"
+      "dial       details";
     column-gap: var(--s-8);
     row-gap: var(--s-6);
     align-items: start;
@@ -347,13 +347,23 @@ button {
 .display__history {
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-2);
   margin-top: var(--s-3);
-  border: 0;
-  padding: 0;
+  border: var(--hair);
+  padding: var(--s-2);
   min-inline-size: 0;
+}
+
+.display__history-title {
+  padding: 0 var(--s-1);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink-50);
+  text-transform: uppercase;
 }
 
 .display__history-btn {
@@ -362,18 +372,41 @@ button {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.2;
+  line-height: 1.25;
   padding: var(--s-2);
-  min-height: 36px;
+  min-height: 44px;
   cursor: pointer;
   max-width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: center;
+  text-align: left;
   overflow-wrap: anywhere;
+}
+
+.display__history-index {
+  color: var(--ink-50);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.display__history-number {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
 }
 
 .display__history-btn:hover,
 .display__history-btn:focus-visible {
   background: var(--ink);
+  color: var(--paper);
+}
+
+.display__history-btn:hover .display__history-index,
+.display__history-btn:focus-visible .display__history-index {
   color: var(--paper);
 }
 
@@ -505,7 +538,7 @@ button {
   }
 }
 
-/* Rotary — keep circle, remove gradients */
+/* Rotary — fixed number plate with a returning finger wheel */
 
 .rotary {
   display: flex;
@@ -523,28 +556,78 @@ button {
   text-align: center;
 }
 
-.rotary__disc {
+.rotary__face {
+  --rotary-size: clamp(240px, 60vw, 340px);
+  --rotary-hole-radius: calc(var(--rotary-size) * -0.29);
+  --rotary-number-radius: calc(var(--rotary-size) * -0.38);
+
   position: relative;
-  width: clamp(220px, 60vw, 320px);
-  height: clamp(220px, 60vw, 320px);
+  width: var(--rotary-size);
+  height: var(--rotary-size);
   border: 3px solid var(--ink);
   border-radius: 50%;
   background: var(--paper);
   box-shadow: var(--shadow-hard);
+}
+
+.rotary__wheel {
+  position: absolute;
+  inset: 13%;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.4s cubic-bezier(0.3, 0, 0.2, 1);
+  z-index: 1;
 }
 
-.rotary__hole {
-  position: absolute;
-  width: 44px;
-  height: 44px;
+.rotary__wheel::after {
+  content: "";
+  width: 26%;
+  height: 26%;
   border: var(--hair);
   border-radius: 50%;
+  background: var(--paper);
+}
+
+.rotary__wheel-hole,
+.rotary__number {
+  position: absolute;
+  top: calc(50% - 22px);
+  left: calc(50% - 22px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.rotary__wheel-hole {
+  border: var(--hair);
   background: var(--ink);
-  color: var(--paper);
+  pointer-events: none;
+}
+
+.rotary__stop {
+  position: absolute;
+  right: 10%;
+  top: 42%;
+  width: 18px;
+  height: 74px;
+  border: var(--hair);
+  background: var(--signal);
+  z-index: 4;
+}
+
+.rotary__number-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.rotary__number {
+  border: var(--hair);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 1rem;
@@ -554,9 +637,15 @@ button {
   cursor: pointer;
 }
 
-.rotary__hole:disabled {
+.rotary__number:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.rotary__number:hover,
+.rotary__number:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .rotary__aux {
@@ -601,6 +690,12 @@ button {
 @media (min-width: 600px) {
   .transport {
     grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .transport {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -683,6 +778,12 @@ button {
 @media (min-width: 600px) {
   .t-btn--primary {
     grid-column: span 1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .t-btn--primary {
+    grid-column: 1 / -1;
   }
 }
 

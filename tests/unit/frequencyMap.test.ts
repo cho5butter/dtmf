@@ -23,4 +23,8 @@ describe("frequencyMap", () => {
       expect(DTMF_FREQUENCY_MAP[key]).toEqual(ITU_Q23[key]);
     }
   });
+
+  test("keeps standard telephone keypad order", () => {
+    expect(DTMF_KEYS).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]);
+  });
 });
