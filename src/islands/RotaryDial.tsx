@@ -8,6 +8,7 @@ import { usePadDialRelease, useRotaryDialRelease } from "./useDialRelease";
 
 const MAX_QUEUE = 20;
 const RETURN_MS = 400;
+const WIND_MS = 360;
 
 export default function RotaryDial() {
   const { engine } = useServices();
@@ -17,8 +18,43 @@ export default function RotaryDial() {
   let queue: string[] = [];
   let processing = false;
   let fingerDown = false;
-  let returnTimer: ReturnType<typeof setTimeout> | undefined;
-  let resetTimer: ReturnType<typeof setTimeout> | undefined;
+  let activeFrame: number | undefined;
+  let animationToken = 0;
+  let disposed = false;
+
+  const shouldReduceMotion = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+
+  const animateRotation = async (from: number, to: number, duration: number) => {
+    if (activeFrame) cancelAnimationFrame(activeFrame);
+    const token = ++animationToken;
+    if (shouldReduceMotion() || duration <= 0) {
+      setRotation(to);
+      return;
+    }
+    setRotation(from);
+    await new Promise<void>((resolve) => {
+      const startedAt = performance.now();
+      const step = (now: number) => {
+        if (disposed || token !== animationToken) {
+          resolve();
+          return;
+        }
+        const progress = Math.min(1, (now - startedAt) / duration);
+        setRotation(from + (to - from) * ease(progress));
+        if (progress < 1) {
+          activeFrame = requestAnimationFrame(step);
+          return;
+        }
+        setRotation(to);
+        resolve();
+      };
+      activeFrame = requestAnimationFrame(step);
+    });
+  };
 
   const processQueue = async () => {
     if (processing || queue.length === 0) return;
@@ -30,19 +66,16 @@ export default function RotaryDial() {
     }
     const start = digitToAngle(digit === "0" ? "0" : digit);
     const stop = fingerStopAngle(start);
-    setRotation(stop);
-    returnTimer = setTimeout(() => {
-      setRotation(returnAngle(stop));
-      recordDigit(digit);
-      if (!fingerDown) {
-        void releaseSession();
-      }
-      resetTimer = setTimeout(() => {
-        processing = false;
-        setQueueFull(queue.length >= MAX_QUEUE);
-        void processQueue();
-      }, RETURN_MS);
-    }, RETURN_MS);
+    await animateRotation(0, stop, WIND_MS);
+    if (disposed) return;
+    recordDigit(digit);
+    if (!fingerDown) {
+      void releaseSession();
+    }
+    await animateRotation(stop, returnAngle(stop), RETURN_MS);
+    processing = false;
+    setQueueFull(queue.length >= MAX_QUEUE);
+    void processQueue();
   };
 
   const enqueueDigit = (digit: string) => {
@@ -61,13 +94,15 @@ export default function RotaryDial() {
   };
 
   onCleanup(() => {
-    if (returnTimer) clearTimeout(returnTimer);
-    if (resetTimer) clearTimeout(resetTimer);
+    disposed = true;
+    animationToken++;
+    if (activeFrame) cancelAnimationFrame(activeFrame);
     queue = [];
     engine.stopAll();
   });
 
   const auxKeys: DtmfKey[] = ["*", "#"];
+  const rotaryDigits = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
   const { onKeyDown, onKeyUp } = usePadDialRelease(engine);
 
   return (
@@ -87,26 +122,42 @@ export default function RotaryDial() {
         void releaseSession();
       }}
     >
-      <p class="rotary__hint">回して指を離すと、ためた分が鳴ります</p>
-      <div class="rotary__disc" style={{ transform: `rotate(${rotation()}deg)` }}>
-        <For each={["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]}>
-          {(digit) => (
-            <button
-              type="button"
-              class="rotary__hole"
-              style={{
-                transform: `rotate(${digitToAngle(digit)}deg) translateY(-105px)`,
-              }}
-              aria-label={`回転ダイヤル ${digit}`}
-              data-digit={digit}
-              disabled={queueFull()}
-              aria-disabled={queueFull()}
-              onPointerDown={() => dialDigit(digit)}
-            >
-              {digit}
-            </button>
-          )}
-        </For>
+      <p class="rotary__hint">黒電話のように戻る間に鳴ります</p>
+      <div class="rotary__face">
+        <div class="rotary__stop" aria-hidden="true" />
+        <div class="rotary__wheel" style={{ transform: `rotate(${rotation()}deg)` }}>
+          <For each={rotaryDigits}>
+            {(digit) => (
+              <span
+                class="rotary__wheel-hole"
+                style={{
+                  transform: `rotate(${digitToAngle(digit)}deg) translateY(var(--rotary-hole-radius))`,
+                }}
+                aria-hidden="true"
+              />
+            )}
+          </For>
+        </div>
+        <div class="rotary__number-ring">
+          <For each={rotaryDigits}>
+            {(digit) => (
+              <button
+                type="button"
+                class="rotary__number"
+                style={{
+                  transform: `rotate(${digitToAngle(digit)}deg) translateY(var(--rotary-number-radius)) rotate(-${digitToAngle(digit)}deg)`,
+                }}
+                aria-label={`回転ダイヤル ${digit}`}
+                data-digit={digit}
+                disabled={queueFull()}
+                aria-disabled={queueFull()}
+                onPointerDown={() => dialDigit(digit)}
+              >
+                {digit}
+              </button>
+            )}
+          </For>
+        </div>
       </div>
       <div class="rotary__aux">
         <For each={auxKeys}>

@@ -15,7 +15,20 @@ export const DTMF_FREQUENCY_MAP = {
 
 export type DtmfKey = keyof typeof DTMF_FREQUENCY_MAP;
 
-export const DTMF_KEYS = Object.keys(DTMF_FREQUENCY_MAP) as DtmfKey[];
+export const DTMF_KEYS = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "*",
+  "0",
+  "#",
+] as const satisfies readonly DtmfKey[];
 
 export function isDtmfKey(char: string): char is DtmfKey {
   return char in DTMF_FREQUENCY_MAP;

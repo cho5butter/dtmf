@@ -3,6 +3,13 @@ import { createEffect, onCleanup, onMount } from "solid-js";
 import { useServices } from "../lib/state/context";
 import { appState } from "../lib/state/store";
 
+export function createIdleWaveformSamples(count: number): number[] {
+  return Array.from({ length: count }, (_, i) => {
+    const phase = (i / Math.max(1, count - 1)) * Math.PI * 4;
+    return Math.round(128 + Math.sin(phase) * 18 + Math.sin(phase * 2.25) * 5);
+  });
+}
+
 export default function Visualizer() {
   const { engine } = useServices();
   let canvas: HTMLCanvasElement | undefined;
@@ -16,11 +23,13 @@ export default function Visualizer() {
 
   const draw = () => {
     const analyser = engine.getAnalyser();
-    if (!canvas || !analyser) return;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const buffer = new Uint8Array(analyser.fftSize);
-    analyser.getByteTimeDomainData(buffer);
+    const buffer = analyser ? new Uint8Array(analyser.fftSize) : createIdleWaveformSamples(96);
+    if (analyser) {
+      analyser.getByteTimeDomainData(buffer);
+    }
     const { width, height } = canvas;
 
     const paper = readVar("--paper", "#F2EFE6");
@@ -59,11 +68,13 @@ export default function Visualizer() {
     } else if (!playing && rafId) {
       cancelAnimationFrame(rafId);
       rafId = 0;
+      draw();
     }
   });
 
   onMount(() => {
     canvas = document.getElementById("dtmf-visualizer") as HTMLCanvasElement | undefined;
+    draw();
   });
 
   onCleanup(() => {
