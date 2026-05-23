@@ -43,10 +43,6 @@ export default function RotaryDial() {
   };
 
   const enqueueDigit = (digit: string) => {
-    if (processing && queue.length >= MAX_QUEUE) {
-      setQueueFull(true);
-      return;
-    }
     if (queue.length >= MAX_QUEUE) {
       setQueueFull(true);
       return;
@@ -72,6 +68,7 @@ export default function RotaryDial() {
 
   return (
     <div
+      class="rotary"
       data-testid="rotary-dial"
       onPointerDown={() => {
         if (!fingerDown) startSession();
@@ -86,20 +83,15 @@ export default function RotaryDial() {
         void releaseSession();
       }}
     >
-      <p class="hint-text mb-3 text-center">
-        ダイヤルを回して数字を記録し、指を離すとためた分が鳴ります
-      </p>
-      <div
-        class="rotary-disc relative mx-auto mb-4 flex h-56 w-56 items-center justify-center rounded-full"
-        style={{ transform: `rotate(${rotation()}deg)` }}
-      >
+      <p class="rotary__hint">回して指を離すと、ためた分が鳴ります</p>
+      <div class="rotary__disc" style={{ transform: `rotate(${rotation()}deg)` }}>
         <For each={["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]}>
           {(digit) => (
             <button
               type="button"
-              class="rotary-hole absolute flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium"
+              class="rotary__hole"
               style={{
-                transform: `rotate(${digitToAngle(digit)}deg) translateY(-90px)`,
+                transform: `rotate(${digitToAngle(digit)}deg) translateY(-105px)`,
               }}
               aria-label={`回転ダイヤル ${digit}`}
               data-digit={digit}
@@ -112,12 +104,12 @@ export default function RotaryDial() {
           )}
         </For>
       </div>
-      <div class="flex justify-center gap-4">
+      <div class="rotary__aux">
         <For each={auxKeys}>
           {(key) => (
             <button
               type="button"
-              class="dtmf-key min-w-[52px] px-4 py-2 text-base"
+              class="rotary__aux-btn"
               aria-label={`補助キー ${key}`}
               onPointerDown={(e) => onKeyDown(key, e)}
               onPointerUp={(e) => void onKeyUp(key, e)}

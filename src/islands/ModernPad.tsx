@@ -15,7 +15,7 @@ export default function ModernPad() {
         {(key) => (
           <button
             type="button"
-            class="keypad__key"
+            class="key"
             aria-label={`ダイヤルキー ${key}`}
             data-key={key}
             data-active={
@@ -27,7 +27,10 @@ export default function ModernPad() {
             onPointerUp={(e) => void onKeyUp(key, e)}
             onPointerCancel={(e) => void onKeyUp(key, e)}
           >
-            {key}
+            <span class="key__label">{key}</span>
+            <span class="key__cap" aria-hidden="true">
+              {key}
+            </span>
           </button>
         )}
       </For>

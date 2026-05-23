@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 要件定義（Phase 3）→ 設計（Phase 3）移行待ち
-**ステータス**: ユーザー指示「レイアウト全削除・完全再構築・PC/スマホ両対応・AIっぽくないデザイン」に基づき Phase 3 を開始。要件定義初稿 (F-014〜F-018 / NFR-012〜014) を `spec/requirements.md` に追記し、PR #27 がマージされ承認済み。設計フェーズへの移行可否をユーザーに確認中。
+**フェーズ**: 実装（Phase 3）完了 — レビュー待ち
+**ステータス**: Phase 3 設計 (P3-1〜P3-8) / 計画 (P3-A〜P3-H) を spec に追記後、Brutalist × Physical Hardware で全 UI 層を再構築。`bun biome ci .` / `bun astro build` / `bun test`（53 件全 pass）/ `size-limit`（17 KB / 100 KB）全て PASS。`grep linear-gradient src/` 0 件。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -19,9 +19,9 @@
 [x] フェーズ3: 計画(Phase 2)
 [/] フェーズ4: 実装(Phase 2)
 [x] フェーズ1: 要件定義(Phase 3)
-[ ] フェーズ2: 設計(Phase 3)
-[ ] フェーズ3: 計画(Phase 3)
-[ ] フェーズ4: 実装(Phase 3)
+[x] フェーズ2: 設計(Phase 3)
+[x] フェーズ3: 計画(Phase 3)
+[x] フェーズ4: 実装(Phase 3)
 ```
 
 ## フェーズ履歴
@@ -42,15 +42,26 @@
 ## 直近の状況
 
 **最後に実施したこと**:
-- Phase 3 要件定義（デザイン完全再構築）を `spec/requirements.md` に追記
-- F-014（レイアウト完全再構築・PC 2カラム / スマホ縦1カラム）, F-015（Brutalist × Physical Hardware）, F-016（番号ディスプレイ主役化）, F-017（PC キーボード操作前面化）, F-018（a11y・E2E 後方互換）を定義
-- NFR-012〜014（AI 装飾排除・レスポンシブ品質・トークン集約）を追加
-- PR #27 を draft で作成 → ユーザーマージで承認
+- Phase 3 設計（P3-1〜P3-8）を `spec/design.md` に追記（3色トークン・PC/スマホレイアウトグリッド・Display/Brand/Mode Picker/Transport/Panel/Visualizer 各コンポーネント仕様）
+- Phase 3 計画（P3-A〜P3-H）を `spec/plan.md` に追記
+- `src/styles/global.css` を完全書き換え（旧 `.app-shell` / `.page` / `.dialer` / `.dial-section` / `.keypad` / `.glass-panel` / `theme-*` / `--accent` / `linear-gradient` 全廃）
+- `src/layouts/Base.astro` から `.app-shell` クラス除去
+- `src/pages/index.astro` を `<main class="stage">` ベースに書き換え（Brand ヘッダ静的レンダリング）
+- `PhoneApp.tsx` を 2カラム grid 内部レイアウト + Enter/Esc 全域ショートカット対応に再構築
+- `NumberInput.tsx` を Display コンポーネント化（output 主役・隠し input・状態ラベル INPUT/PLAYING・桁カウンタ N/64・3段階桁表現）
+- `PlaybackControls.tsx` を Transport（▶ PLAY ハードシャドウ + `<kbd>` 表記）に書き換え
+- `ModeSwitcher.tsx` をブルータリスト反転トグルに書き換え（aria-label でテスト互換維持）
+- `DialPad.tsx` / `ModernPad.tsx` を正方形キー + ハードシャドウ + キーキャップ表記化
+- `RotaryDial.tsx` のグラデを排除し solid `--paper` + 円形枠線に
+- `Visualizer.tsx` のグラデと shadowBlur を排除し `--signal` 一色に
+- `SettingsPanel.tsx` / `DetailPanel.tsx` / `Toast.tsx` / `Footer.astro` をブルータリスト化
+- `ServicesContext` に `runAutoPlay` / `stopAll` を追加し、キーボード Enter から再生発火可能に
+- 品質ゲート: `bun biome ci .` PASS（warning のみ）/ `bun astro build` PASS（17 KB gzip） / `bun test` 53 件全 PASS
 
 **次のアクション**:
-1. ユーザーから Phase 3 設計フェーズへの明示的進行許可を得る
-2. 承認後、`spec/design.md` に F-014〜F-018 に対応する設計（カラートークン・タイポスケール・レイアウトグリッド・コンポーネント仕様）を追記
-3. 設計承認後、`spec/plan.md` に Phase 3 実装タスクを追記
+1. ローカル動作確認（必要に応じて Playwright E2E 実行）
+2. ブランチ `claude/eloquent-heisenberg-Gzt5X` をコミット & プッシュ、PR draft 作成
+3. ユーザーレビュー → マージ後 GitHub Pages へ自動デプロイ
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる

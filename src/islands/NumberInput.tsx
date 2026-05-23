@@ -1,5 +1,19 @@
 /** @jsxImportSource solid-js */
+import { For, Show } from "solid-js";
 import { appState, setInput } from "../lib/state/store";
+
+const MAX_DIGITS = 64;
+const PLACEHOLDER = "— — — — —";
+
+function statusOf(playback: string): { label: string; state: "input" | "playing" | "done" } {
+  if (playback === "auto_running" || playback === "key_held") {
+    return { label: "PLAYING", state: "playing" };
+  }
+  if (playback === "auto_paused") {
+    return { label: "PAUSED", state: "playing" };
+  }
+  return { label: "INPUT", state: "input" };
+}
 
 export default function NumberInput() {
   const handleInput = (e: Event) => {
@@ -7,51 +21,78 @@ export default function NumberInput() {
     setInput(value);
   };
 
-  const hint = () =>
-    appState.hadInternationalPrefix
-      ? "先頭の + は表示のみ（DTMF では鳴りません）"
-      : "0〜9、*、#。キーを押して番号をため、離すとそのキーの音が鳴ります";
+  const status = () => statusOf(appState.playback);
+
+  const focusInput = () => {
+    const el = document.querySelector('[data-testid="phone-input"]') as HTMLInputElement | null;
+    el?.focus();
+  };
+
+  const digits = () => appState.display.split("");
+
+  const digitState = (idx: number, totalRunning: boolean): "done" | "now" | "next" => {
+    if (!totalRunning) return "done";
+    if (appState.currentDigitIdx < 0) return "next";
+    if (idx < appState.currentDigitIdx) return "done";
+    if (idx === appState.currentDigitIdx) return "now";
+    return "next";
+  };
 
   return (
-    <div class="number-field" data-testid="number-field">
-      <label class="number-field__label" for="phone-input">
-        入力番号
-      </label>
+    <section class="display" aria-label="番号ディスプレイ" data-testid="number-field">
+      <header class="display__meta">
+        <span class="display__status" data-state={status().state}>
+          ● {status().label}
+        </span>
+        <span class="display__count">
+          {appState.digits.length} / {MAX_DIGITS}
+        </span>
+      </header>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: 隠し input にフォーカス転送するだけ */}
+      <output
+        class="display__screen"
+        aria-label="入力番号"
+        data-testid="digit-preview"
+        onClick={focusInput}
+      >
+        <Show
+          when={appState.display.length > 0}
+          fallback={<span class="display__placeholder">{PLACEHOLDER}</span>}
+        >
+          <For each={digits()}>
+            {(char, idx) => {
+              const running = () =>
+                appState.playback === "auto_running" || appState.playback === "auto_paused";
+              return (
+                <span
+                  class="display__digit"
+                  data-state={digitState(idx(), running())}
+                  data-active={appState.currentDigitIdx === idx() && running() ? "true" : undefined}
+                >
+                  {char}
+                </span>
+              );
+            }}
+          </For>
+        </Show>
+      </output>
       <input
         id="phone-input"
         type="tel"
         inputmode="tel"
         autocomplete="tel"
-        class="number-field__input"
-        placeholder="番号がここに表示されます"
+        class="display__hidden-input"
         value={appState.raw}
         onInput={handleInput}
         aria-label="電話番号入力"
-        aria-describedby="intl-prefix-note"
+        aria-describedby="display-hint"
         data-testid="phone-input"
       />
-      <p id="intl-prefix-note" class="number-field__hint">
-        {hint()}
+      <p id="display-hint" class="display__hint">
+        {appState.hadInternationalPrefix
+          ? "先頭の + は表示のみ"
+          : "キーを押してためる / 離すと鳴る / Enter で全再生"}
       </p>
-      <div
-        class="number-field__preview"
-        role="status"
-        aria-label="再生中の桁"
-        data-testid="digit-preview"
-      >
-        {appState.display.length === 0 ? (
-          <span class="number-field__preview-empty">—</span>
-        ) : (
-          appState.display.split("").map((char, idx) => (
-            <span
-              class="number-field__digit"
-              data-active={appState.currentDigitIdx === idx ? "true" : undefined}
-            >
-              {char}
-            </span>
-          ))
-        )}
-      </div>
-    </div>
+    </section>
   );
 }

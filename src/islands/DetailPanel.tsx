@@ -14,18 +14,27 @@ export default function DetailPanel() {
   };
 
   return (
-    <details class="glass-panel" data-testid="detail-panel">
-      <summary>周波数詳細</summary>
-      <Show when={freqs()} fallback={<p class="hint-text mt-2">再生中のキーがありません</p>}>
-        {(f) => (
-          <dl class="mt-3 grid grid-cols-2 gap-2 text-sm text-zinc-300">
-            <dt class="text-zinc-400">低群 (Hz)</dt>
-            <dd data-testid="low-freq">{f().low}</dd>
-            <dt class="text-zinc-400">高群 (Hz)</dt>
-            <dd data-testid="high-freq">{f().high}</dd>
-          </dl>
-        )}
-      </Show>
+    <details class="panel" data-testid="detail-panel">
+      <summary>DETAILS / Frequencies</summary>
+      <div class="panel__body">
+        <Show
+          when={freqs()}
+          fallback={
+            <p style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-50); margin: 0;">
+              再生中のキーがありません
+            </p>
+          }
+        >
+          {(f) => (
+            <dl class="freq-grid">
+              <dt>Low (Hz)</dt>
+              <dd data-testid="low-freq">{f().low}</dd>
+              <dt>High (Hz)</dt>
+              <dd data-testid="high-freq">{f().high}</dd>
+            </dl>
+          )}
+        </Show>
+      </div>
     </details>
   );
 }
