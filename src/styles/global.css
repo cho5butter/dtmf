@@ -215,6 +215,20 @@ button {
   height: auto;
 }
 
+/* ─────────── Site footer (copyright) ─────────── */
+
+.site-footer {
+  margin-top: auto;
+  padding: var(--s-3) 0;
+  border-top: var(--hair);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-50);
+  text-align: center;
+}
+
 /* ─────────── Display (calculator LCD) ─────────── */
 
 .display {

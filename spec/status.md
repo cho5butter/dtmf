@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / ロゴ・ファビコン視覚資料反映）
-**ステータス**: ユーザー提供のライト/ダーク用ロゴ画像（黒電話 + 信号波 + 「ピポる」+ 赤イコライザードット + WEB DIALER / DTMF）を視覚的に反映し、`public/` の SVG ロゴおよびファビコンを刷新。電話アイコンを画像の輪郭・指穴・中央ハブ・止め金により近い形状へ再描画し、書体ウェイトを 900 / レタースペーシングを画像準拠に調整した。
+**フェーズ**: 実装（Phase 3 補正 / フッター著作権表記追加）
+**ステータス**: ユーザー指示「サイト一番下にサービス名を掲載しない／代わりに著作権表記を表示」に対応。`index.astro` 末尾に `<footer class="site-footer">© 2026</footer>` を追加し、`global.css` に `.site-footer` スタイル（mono / 11px / uppercase / hair top border）を新設。サービス名（ピポる）はフッターに含めない方針を維持した。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -43,7 +43,13 @@
 
 **最後に実施したこと**:
 
-*ロゴ・ファビコン視覚資料反映（本ブランチ / 2026-05-24）*:
+*フッター著作権表記追加（本ブランチ / 2026-05-24）*:
+- ユーザー指示「サイトの一番下にサービス名を掲載しない」→ 確認の結果「下部に著作権表記を表示して」
+- `src/pages/index.astro`: `<main class="stage">` 末尾に `<footer class="site-footer"><small>&copy; 2026</small></footer>` を追加（サービス名「ピポる」は含めない）
+- `src/styles/global.css`: `.site-footer` を追加（mono 11px / letter-spacing 0.18em / uppercase / `border-top: var(--hair)` / `color: var(--ink-50)` / `margin-top: auto` で flex 末尾に押し込み）
+- `bash scripts/quality-gate.sh` PASS（84 tests / 20.99 KB gzip）
+
+*ロゴ・ファビコン視覚資料反映（以前 / 2026-05-24）*:
 - ユーザー添付の 4 枚（ライト/ダーク × 横長ロゴ / 正方形アイコン）を視覚参照として SVG を再構成
 - 電話アイコン: 受話器カーブ・指穴 10 個・中央ハブ・止め金タブの輪郭を画像に寄せて再描画
 - 文字部: 「ピポる」を font-weight 900 / letter-spacing -0.03em、サブタイトルを letter-spacing 0.22em に調整
@@ -109,9 +115,9 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 本ブランチを push し draft PR を作成
-2. PR レビュー → マージ後、GitHub Pages でロゴ（ライト/ダーク）とファビコンの表示を確認
-3. 添付画像の書体と完全一致が必要な場合は、オリジナル SVG/PNG の差し替えを検討
+1. 本ブランチを push し draft PR を作成（フッター追加 + ロゴ刷新を含む）
+2. PR レビュー → マージ後、GitHub Pages でフッター表示・ロゴ表示を確認
+3. 著作権表記の本文（年号・記載者名等）の調整が必要であればユーザー確認の上で更新
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
