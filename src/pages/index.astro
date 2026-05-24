@@ -1,16 +1,13 @@
 ---
 import Base from "../layouts/Base.astro";
-import Footer from "../components/Footer.astro";
+import BrandLogo from "../components/BrandLogo.astro";
 import PhoneApp from "../islands/PhoneApp";
 ---
 
-<Base title="DTMF / Web Dialer">
+<Base title="ピポる | WEB DIALER / DTMF">
   <main class="stage">
     <header class="brand">
-      <span class="brand__mark">DTMF</span>
-      <span class="brand__divider">/</span>
-      <span class="brand__name">WEB DIALER</span>
-      <span class="brand__meta">2026 · Tone Generator</span>
+      <BrandLogo />
     </header>
     <p
       id="audio-unsupported"

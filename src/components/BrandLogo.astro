@@ -1,0 +1,16 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<picture class="brand__logo">
+  <source srcset={`${base}logo-piporu-dark.svg`} media="(prefers-color-scheme: dark)" />
+  <img
+    class="brand__logo-img"
+    src={`${base}logo-piporu-light.svg`}
+    alt="ピポる — WEB DIALER / DTMF"
+    width="320"
+    height="64"
+    decoding="async"
+    fetchpriority="high"
+  />
+</picture>

@@ -199,39 +199,20 @@ button {
 
 .brand {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--s-3);
+  align-items: center;
   padding: var(--s-3) 0;
   border-bottom: var(--hair);
 }
 
-.brand__mark {
-  font-weight: 800;
-  font-size: clamp(1.75rem, 6vw, 3rem);
-  letter-spacing: -0.04em;
-  line-height: 0.95;
+.brand__logo {
+  display: block;
+  line-height: 0;
 }
 
-.brand__divider {
-  font-weight: 200;
-  font-size: clamp(1.5rem, 5vw, 2.5rem);
-  color: var(--ink-50);
-}
-
-.brand__name {
-  font-weight: 800;
-  font-size: clamp(1.25rem, 4vw, 2rem);
-  letter-spacing: -0.02em;
-}
-
-.brand__meta {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--ink-50);
-  text-transform: uppercase;
+.brand__logo-img {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
 }
 
 /* ─────────── Display (calculator LCD) ─────────── */

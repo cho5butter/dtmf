@@ -1,6 +1,6 @@
-# DTMF Web Dialer
+# ピポる（Piporu）
 
-公衆電話のマウスピースに向けて、ブラウザから DTMF（Dual-Tone Multi-Frequency）トーンを生成・再生する静的 Web アプリです。
+公衆電話のマウスピースに向けて、ブラウザから DTMF（Dual-Tone Multi-Frequency）トーンを生成・再生する静的 Web ダイヤラーです。
 
 ## 技術スタック
 
