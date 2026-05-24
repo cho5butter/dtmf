@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / フッター著作権表記追加）
-**ステータス**: ユーザー指示「サイト一番下にサービス名を掲載しない／代わりに著作権表記を表示」に対応。`index.astro` 末尾に `<footer class="site-footer">© 2026</footer>` を追加し、`global.css` に `.site-footer` スタイル（mono / 11px / uppercase / hair top border）を新設。サービス名（ピポる）はフッターに含めない方針を維持した。
+**フェーズ**: 実装（Phase 3 補正 / カスタムドメイン piporu.c5bt.jp 対応）
+**ステータス**: ユーザー報告「piporu.c5bt.jp でロゴが壊れ、ダイヤルパッドが表示されない」に対応。原因は `astro.config.mjs` の `base: "/dtmf/"` 設定によりアセット参照が `/dtmf/...` に固定され、ルート配信のカスタムドメインで全アセットが 404 になっていたこと。`site` を `https://piporu.c5bt.jp` に変更し `base` を撤去、`public/CNAME` を追加して GitHub Pages のカスタムドメイン設定をビルド成果物に含めた。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -42,6 +42,13 @@
 ## 直近の状況
 
 **最後に実施したこと**:
+
+*カスタムドメイン piporu.c5bt.jp 対応（本ブランチ / 2026-05-24）*:
+- ユーザー報告: `piporu.c5bt.jp` でヘッダーとフッター（`© 2026`）以外が表示されず、ロゴが壊れた画像アイコンになっていた
+- 原因: `astro.config.mjs` の `site: "https://cho5butter.github.io"` / `base: "/dtmf/"` により、ロゴ・JS バンドル・CSS が `/dtmf/...` 参照で生成。ルート配信のカスタムドメインで全て 404 → Solid アイランド（`PhoneApp`）も読み込めない
+- 修正: `site` を `https://piporu.c5bt.jp` に変更し `base` を撤去（=`/`）。`public/CNAME` に `piporu.c5bt.jp` を追加（GitHub Pages のカスタムドメイン設定をデプロイ成果物に含めて永続化）
+- `README.md` の配信先 URL も更新
+- `bash scripts/quality-gate.sh` PASS（84 tests / 20.99 KB gzip）。ビルド成果物の `dist/index.html` で `/dtmf/` プレフィックスが完全に消えていることを確認
 
 *フッター著作権表記追加（本ブランチ / 2026-05-24）*:
 - ユーザー指示「サイトの一番下にサービス名を掲載しない」→ 確認の結果「下部に著作権表記を表示して」
@@ -115,9 +122,9 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 本ブランチを push し draft PR を作成（フッター追加 + ロゴ刷新を含む）
-2. PR レビュー → マージ後、GitHub Pages でフッター表示・ロゴ表示を確認
-3. 著作権表記の本文（年号・記載者名等）の調整が必要であればユーザー確認の上で更新
+1. 本ブランチ（`claude/deployment-issue-SRIkp`）を push し draft PR を作成
+2. PR マージ後、`piporu.c5bt.jp` でロゴ・ダイヤルパッドが正常に表示されることを確認
+3. GitHub Pages 設定画面のカスタムドメインが `piporu.c5bt.jp` のまま保持されていることを確認（CNAME ファイル追加により永続化される想定）
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
