@@ -801,6 +801,47 @@ graph TD
 
 ---
 
+## 計画 P3-J: 回転ダイヤルの向き再校正 + Clear ボタン側列配置（F-003 / F-019 改訂）
+
+**ステータス**: 完了
+
+**目的**: 要件 F-003（数字配置「1=2時 / 0=5時」、止め金 4 時方向）と F-019（Clear ボタンを `display__screen` 右隣に物理ボタン体裁で配置）に揃える。論理モデル（30°/穴、10 穴で 270° 弧、90° 隙間）は P3-11 を踏襲し、表示基準角とボタン体裁のみを再設計する。
+
+**前提条件**: `spec/design.md` の P3-12 セクションを参照
+
+**タスク**:
+
+- [x] **テスト先行（RED）**
+  - [x] `tests/unit/rotaryAngle.test.ts` を新ジオメトリ（`FINGER_STOP_OFFSET=30°` / 回転量 = N×30°+30°）に合わせて改訂
+  - [x] `bun test` で改訂テストが RED になることを確認（旧 `FINGER_STOP_OFFSET=0` 実装に対して）
+- [x] **実装（GREEN）**
+  - [x] `src/lib/dtmf/rotaryAngle.ts`: `FINGER_STOP_OFFSET` を 0 → 30 に変更、コメント更新
+  - [x] `src/styles/global.css`: `--rotary-base-rotation` 150 → 90、`--rotary-stop-angle` 150 → 120 に変更、コメント更新
+  - [x] `src/styles/global.css`: `.display__clear` を新ブルータリスト体裁に書き換え（`var(--hair)` + `var(--shadow-hard)` + active で `translate(4px, 4px)`）、`.display__row` を追加
+  - [x] `src/islands/NumberInput.tsx`: Clear ボタンを `display__meta` から取り出し、`<div class="display__row">` 内で `display__screen` の右隣に配置。隠し input も同 row 内に移動
+- [x] **REFACTOR / 確認**
+  - [x] `bash scripts/quality-gate.sh` PASS
+  - [x] 既存 unit/component スイート全 pass（NumberInput / rotaryAngle 改訂を含む）
+- [x] **ドキュメント更新**
+  - [x] 本計画のチェックボックスを `[x]` に更新
+  - [x] `spec/requirements.md` F-003 / F-019 受け入れ基準を改訂
+  - [x] `spec/design.md` に P3-12 を追記し、P3-11 へ改訂注記を付与
+  - [x] `spec/status.md` 直近の状況・次のアクションを更新
+
+**完了条件**:
+- [x] 回転ダイヤルの数字配置が画像（典型的 NTT 600 形）どおり（3=12時 / 1=2時 / 0=5時 / 止め金 4時）
+- [x] Clear ボタンが `display__screen` の右隣にハードシャドウ付き物理ボタンとして表示され、`rotary__aux-btn` と同じ active 挙動（`translate(4px, 4px)`）を持つ
+- [x] `bash scripts/quality-gate.sh` PASS
+- [x] 受け入れ基準の全項目 PASS
+
+**影響範囲**:
+- `src/lib/dtmf/rotaryAngle.ts` / `src/islands/NumberInput.tsx` / `src/styles/global.css`
+- `tests/unit/rotaryAngle.test.ts`
+
+**テスト方針**: TDD（テスト先行）。`bun test` の unit テストで挙動を担保し、品質ゲートで全体回帰を確認。
+
+---
+
 ## 最終計画（固定・必須）: 脆弱性レビュー
 
 **ステータス**: 完了

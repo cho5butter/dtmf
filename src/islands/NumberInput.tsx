@@ -52,6 +52,41 @@ export default function NumberInput() {
         <span class="display__status" data-state={status().state}>
           ● {status().label}
         </span>
+        <span class="display__count">
+          {appState.digits.length} / {MAX_DIGITS}
+        </span>
+      </header>
+      <div class="display__row">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: 隠し input にフォーカス転送するだけ */}
+        <output
+          class="display__screen"
+          aria-label="入力番号"
+          data-testid="digit-preview"
+          onClick={focusInput}
+        >
+          <Show
+            when={appState.display.length > 0}
+            fallback={<span class="display__placeholder">{PLACEHOLDER}</span>}
+          >
+            <For each={digits()}>
+              {(char, idx) => {
+                const running = () =>
+                  appState.playback === "auto_running" || appState.playback === "auto_paused";
+                return (
+                  <span
+                    class="display__digit"
+                    data-state={digitState(idx(), running())}
+                    data-active={
+                      appState.currentDigitIdx === idx() && running() ? "true" : undefined
+                    }
+                  >
+                    {char}
+                  </span>
+                );
+              }}
+            </For>
+          </Show>
+        </output>
         <button
           type="button"
           class="display__clear"
@@ -62,50 +97,19 @@ export default function NumberInput() {
         >
           CLEAR
         </button>
-        <span class="display__count">
-          {appState.digits.length} / {MAX_DIGITS}
-        </span>
-      </header>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: 隠し input にフォーカス転送するだけ */}
-      <output
-        class="display__screen"
-        aria-label="入力番号"
-        data-testid="digit-preview"
-        onClick={focusInput}
-      >
-        <Show
-          when={appState.display.length > 0}
-          fallback={<span class="display__placeholder">{PLACEHOLDER}</span>}
-        >
-          <For each={digits()}>
-            {(char, idx) => {
-              const running = () =>
-                appState.playback === "auto_running" || appState.playback === "auto_paused";
-              return (
-                <span
-                  class="display__digit"
-                  data-state={digitState(idx(), running())}
-                  data-active={appState.currentDigitIdx === idx() && running() ? "true" : undefined}
-                >
-                  {char}
-                </span>
-              );
-            }}
-          </For>
-        </Show>
-      </output>
-      <input
-        id="phone-input"
-        type="tel"
-        inputmode="tel"
-        autocomplete="tel"
-        class="display__hidden-input"
-        value={appState.raw}
-        onInput={handleInput}
-        aria-label="電話番号入力"
-        aria-describedby="display-hint"
-        data-testid="phone-input"
-      />
+        <input
+          id="phone-input"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          class="display__hidden-input"
+          value={appState.raw}
+          onInput={handleInput}
+          aria-label="電話番号入力"
+          aria-describedby="display-hint"
+          data-testid="phone-input"
+        />
+      </div>
       <p id="display-hint" class="display__hint">
         {appState.hadInternationalPrefix
           ? "先頭の + は表示のみ"

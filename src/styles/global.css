@@ -266,43 +266,66 @@ button {
 }
 
 /*
- * Clear ボタン: display__meta 行（11px mono uppercase）に揃えたインライン体裁。
- * status / count と同じタイポで違和感なく並び、警告色＋下線で「クリック可能な破壊操作」を示す。
- * hover/focus で signal 反転（既存 Brutalist トーン）。
+ * 入力欄の右側に Clear ボタンを並べる側列レイアウト（P3-12）。
+ * 隠し input の inset:0 アンカーを `.display` から `.display__row` に移し、
+ * クリック領域はスクリーンと同じ範囲のままに保つ（pointer-events: none を継続）。
+ */
+.display__row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+/*
+ * Clear ボタン: 他の物理ボタン（rotary__aux-btn / t-btn）と同じブルータリスト体裁。
+ * 入力欄と同じ高さに伸び、active で 4px 沈み＋signal 反転（紙ボタンの押下感）。
  */
 .display__clear {
   appearance: none;
-  background: transparent;
-  color: var(--signal);
-  border: 0;
-  border-bottom: 2px solid var(--signal);
-  border-radius: 0;
+  border: var(--hair);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   line-height: 1;
-  padding: 6px 10px;
+  padding: var(--s-2) var(--s-3);
+  min-width: 56px;
   cursor: pointer;
+  box-shadow: var(--shadow-hard);
+  border-radius: 0;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
     background 0.05s linear,
-    color 0.05s linear,
-    border-color 0.05s linear;
+    color 0.05s linear;
 }
 
 .display__clear:hover:not(:disabled),
 .display__clear:focus-visible:not(:disabled) {
   background: var(--signal);
   color: var(--paper);
-  border-bottom-color: var(--signal);
+}
+
+.display__clear:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+  background: var(--signal);
+  color: var(--paper);
 }
 
 .display__clear:disabled {
+  background: var(--paper);
   color: var(--ink-50);
-  border-bottom-color: var(--ink-50);
-  opacity: 0.45;
+  opacity: 0.35;
   cursor: not-allowed;
+  box-shadow: var(--shadow-hard);
 }
 
 @keyframes led-blink {
@@ -320,6 +343,8 @@ button {
   position: relative;
   z-index: 1;
   display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   width: 100%;
   min-height: 96px;
   padding: var(--s-3) var(--s-4);
@@ -608,20 +633,21 @@ button {
   --rotary-hole-radius: calc(var(--rotary-size) * -0.34);
   --rotary-number-radius: var(--rotary-hole-radius);
   /*
-   * 実機の数字配置に揃える回転基準。
+   * 実機写真どおりのフェイス向き（P3-12）。
    * 数字穴は 30° 間隔で 10 個並び（合計 270°）、残る 90° は穴のない
-   * 「指止め用の隙間」。止め金は「0」と「1」の間（「1」寄り）に置かれる。
+   * 「指止め用の隙間」。止め金は「0」と「1」の間（「0」寄り）に置かれる。
    *
-   * 数字穴 N の論理位置 (digitToAngle(N) = N×30°) を、止め金（5時方向 / 150°）から
-   * 反時計回りに N×30° 回した実画面位置に配置する: 表示位置 = base - N×30°
-   * base = stop = 150° として:
-   *   1 → 120° (4時)、2 → 90° (3時)、3 → 60° (2時)、4 → 30° (1時)、
-   *   5 → 0° (12時)、6 → 330° (11時)、7 → 300° (10時)、8 → 270° (9時)、
-   *   9 → 240° (8時)、0 → -150°≡210° (7時)。
-   * 止め金は 150°（5時方向）で「1」(120°) の 30° CW・「0」(210°) の 60° CCW にある。
+   * 数字穴 N の論理位置 (digitToAngle(N) = N×30°) を、base = 90° から
+   * 反時計回りに N×30° 回した実画面位置に配置する: 表示位置 = base − N×30°
+   * base = 90°、stop = 120° として:
+   *   1 → 60° (2時)、2 → 30° (1時)、3 → 0° (12時=最上部)、4 → 330° (11時)、
+   *   5 → 300° (10時)、6 → 270° (9時)、7 → 240° (8時)、8 → 210° (7時)、
+   *   9 → 180° (6時=最下部)、0 → −210°≡150° (5時)。
+   * 止め金は 120°（4時方向）で「1」(60°) の 60° CW・「0」(150°) の 30° CCW にある。
+   * すなわち stop − base = 30° = FINGER_STOP_OFFSET（rotaryAngle.ts と一致）。
    */
-  --rotary-base-rotation: 150deg;
-  --rotary-stop-angle: 150deg;
+  --rotary-base-rotation: 90deg;
+  --rotary-stop-angle: 120deg;
 
   position: relative;
   width: var(--rotary-size);
