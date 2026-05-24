@@ -4,8 +4,7 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   output: "static",
-  site: "https://cho5butter.github.io",
-  base: "/dtmf/",
+  site: "https://piporu.c5bt.jp",
   integrations: [solid()],
   vite: {
     plugins: [tailwindcss()],

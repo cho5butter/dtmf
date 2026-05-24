@@ -38,7 +38,7 @@ CI=true RUN_E2E=1 bash scripts/test.sh
 
 ## 配信
 
-GitHub Pages: https://cho5butter.github.io/dtmf/
+本番: https://piporu.c5bt.jp/ （GitHub Pages + カスタムドメイン）
 
 ## ライセンス
 
