@@ -106,15 +106,15 @@ export default function NumberInput() {
           value={appState.raw}
           onInput={handleInput}
           aria-label="電話番号入力"
-          aria-describedby="display-hint"
+          {...(appState.hadInternationalPrefix ? { "aria-describedby": "display-hint" } : {})}
           data-testid="phone-input"
         />
       </div>
-      <p id="display-hint" class="display__hint">
-        {appState.hadInternationalPrefix
-          ? "先頭の + は表示のみ"
-          : "キーを押してためる / 離すと鳴る / Enter で全再生"}
-      </p>
+      <Show when={appState.hadInternationalPrefix}>
+        <p id="display-hint" class="display__hint">
+          先頭の + は表示のみ
+        </p>
+      </Show>
       <Show when={appState.history.length > 0}>
         <fieldset class="display__history">
           <legend class="display__history-title">RECENT DIALS</legend>

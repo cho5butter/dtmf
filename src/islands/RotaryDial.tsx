@@ -166,7 +166,6 @@ export default function RotaryDial() {
       onPointerUp={releaseFinger}
       onPointerCancel={releaseFinger}
     >
-      <p class="rotary__hint">戻る間にカチカチ鳴ります（実機相当）</p>
       <div class="rotary__face">
         {/* 指止め: ベース盤の5時方向に固定 (--rotary-stop-angle) */}
         <div class="rotary__stop" aria-hidden="true" />
