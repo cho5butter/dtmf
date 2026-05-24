@@ -1,29 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ピポる">
   <g color="#f2efe6">
     <g stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
-      <path d="M6 44c0-3 2-5 5-5h30c3 0 5 2 5 5v6c0 2.5-8 4.5-20 4.5S6 52.5 6 50z" />
-      <path d="M9 40c0-9.5 6.5-17 14.5-17S38 30.5 38 40" />
-      <path d="M12 27c-1-1-2-2-2-3 0-2 2.5-3.5 6-3.5s6 1.5 6 3.5-2.5 2.5-6 2.5" />
-      <path d="M35 27c1-1 2-2 2-3 0-2-2.5-3.5-6-3.5s-6 1.5-6 3.5 2.5 2.5 6 2.5" />
+      <path d="M4 24 Q4 16 12 16 L40 16 Q48 16 48 24 L48 56 Q48 62 42 62 L10 62 Q4 62 4 56 Z" />
+      <path d="M 10 4 A 6 6 0 0 0 5 14 A 6 6 0 0 0 14 16 L 38 16 A 6 6 0 0 0 47 14 A 6 6 0 0 0 42 4 A 6 6 0 0 0 38 5 L 14 5 A 6 6 0 0 0 10 4 Z" />
       <circle cx="26" cy="40" r="13" />
-      <circle cx="26" cy="40" r="3.6" fill="currentColor" stroke="none" />
-      <path d="M36 46l3 3.5" />
+      <path d="M36 47 L39 50" />
     </g>
+    <circle cx="26" cy="40" r="3.6" fill="currentColor" />
     <g fill="currentColor">
-      <circle cx="26" cy="30.5" r="1.7" />
-      <circle cx="31.4" cy="31.6" r="1.7" />
-      <circle cx="35.4" cy="34.7" r="1.7" />
-      <circle cx="37.5" cy="39.2" r="1.7" />
-      <circle cx="36.7" cy="44" r="1.7" />
-      <circle cx="31.4" cy="48.4" r="1.7" />
-      <circle cx="26" cy="49.5" r="1.7" />
-      <circle cx="20.6" cy="48.4" r="1.7" />
-      <circle cx="16.5" cy="45.3" r="1.7" />
-      <circle cx="14.4" cy="40.8" r="1.7" />
+      <circle cx="26" cy="31" r="1.6" />
+      <circle cx="31.29" cy="32.72" r="1.6" />
+      <circle cx="34.56" cy="37.22" r="1.6" />
+      <circle cx="34.56" cy="42.78" r="1.6" />
+      <circle cx="31.29" cy="47.28" r="1.6" />
+      <circle cx="26" cy="49" r="1.6" />
+      <circle cx="20.71" cy="47.28" r="1.6" />
+      <circle cx="17.44" cy="42.78" r="1.6" />
+      <circle cx="17.44" cy="37.22" r="1.6" />
+      <circle cx="20.71" cy="32.72" r="1.6" />
     </g>
-    <g stroke="#E60012" stroke-width="3.4" stroke-linecap="round" fill="none">
-      <path d="M48 31c4 1.5 6 4 6 7s-2 5.5-6 7" />
-      <path d="M52 26c6.5 2 10 6.5 10 12s-3.5 10-10 12" />
+    <g stroke="#E60012" stroke-width="3" stroke-linecap="round" fill="none">
+      <path d="M52 30 Q57 40 52 50" />
+      <path d="M56 24 Q62 40 56 56" />
     </g>
   </g>
 </svg>
