@@ -10,24 +10,25 @@ import {
 } from "../../src/lib/dtmf/rotaryAngle";
 
 describe("rotaryAngle", () => {
-  test("digitToAngle and angleToDigit round trip", () => {
-    expect(digitToAngle("5")).toBe(180);
-    expect(angleToDigit(180)).toBe("5");
+  test("digitToAngle and angleToDigit round trip (30°/step)", () => {
+    expect(digitToAngle("5")).toBe(150);
+    expect(angleToDigit(150)).toBe("5");
   });
 
-  test("zero has the longest black-phone travel", () => {
-    expect(digitToAngle("1")).toBe(36);
-    expect(digitToAngle("9")).toBe(324);
-    expect(digitToAngle("0")).toBe(360);
+  test("zero has the longest black-phone travel (NTT 600 形・30°×10=300°)", () => {
+    expect(digitToAngle("1")).toBe(30);
+    expect(digitToAngle("9")).toBe(270);
+    expect(digitToAngle("0")).toBe(300);
     expect(fingerStopAngle(digitToAngle("0"))).toBeGreaterThan(fingerStopAngle(digitToAngle("9")));
-    expect(angleToDigit(360)).toBe("0");
+    expect(angleToDigit(300)).toBe("0");
   });
 
-  test("finger stop sits halfway between adjacent digit holes (real-phone offset)", () => {
-    // 実機の止め金は数字穴と次の穴の中間 (= 半ステップ = 18°) にある
-    expect(fingerStopAngle(digitToAngle("1"))).toBe(54);
-    expect(fingerStopAngle(digitToAngle("5"))).toBe(198);
-    expect(fingerStopAngle(digitToAngle("0"))).toBe(378);
+  test("finger stop coincides with the dialed digit's full rotation (no half-step offset)", () => {
+    // 実機: 止め金は数字穴 N から時計回りに N ステップ先 (=N×30°) 回した位置にある。
+    // よって fingerStopAngle(digitToAngle(N)) === digitToAngle(N)。
+    expect(fingerStopAngle(digitToAngle("1"))).toBe(30);
+    expect(fingerStopAngle(digitToAngle("5"))).toBe(150);
+    expect(fingerStopAngle(digitToAngle("0"))).toBe(300);
   });
 
   test("finger stop and return", () => {
@@ -35,8 +36,12 @@ describe("rotaryAngle", () => {
     expect(returnAngle(stop)).toBe(0);
   });
 
-  test("finger stop always adds travel beyond the selected digit", () => {
-    expect(fingerStopAngle(digitToAngle("5"))).toBeGreaterThan(digitToAngle("5"));
+  test("digits are spaced 30° apart (not 36°): 10 holes occupy only 270° of arc", () => {
+    // 隣接する数字穴間の論理角差は 30° で一定。
+    expect(digitToAngle("2") - digitToAngle("1")).toBe(30);
+    expect(digitToAngle("9") - digitToAngle("8")).toBe(30);
+    // 「1」(=30°) と「0」(=300°) の差 = 270° で、残り 90° が指止め用の隙間。
+    expect(digitToAngle("0") - digitToAngle("1")).toBe(270);
   });
 
   test("rotation keyframes split long travel into visible steps", () => {

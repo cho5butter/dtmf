@@ -265,35 +265,43 @@ button {
   color: var(--ink);
 }
 
+/*
+ * Clear ボタン: display__meta 行（11px mono uppercase）に揃えたインライン体裁。
+ * status / count と同じタイポで違和感なく並び、警告色＋下線で「クリック可能な破壊操作」を示す。
+ * hover/focus で signal 反転（既存 Brutalist トーン）。
+ */
 .display__clear {
+  appearance: none;
+  background: transparent;
+  color: var(--signal);
+  border: 0;
+  border-bottom: 2px solid var(--signal);
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink);
-  background: var(--paper);
-  border: 2px solid var(--ink);
-  border-radius: 0;
-  padding: 6px 12px;
-  min-height: 44px;
-  min-width: 44px;
-  cursor: pointer;
   line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition:
+    background 0.05s linear,
+    color 0.05s linear,
+    border-color 0.05s linear;
 }
 
 .display__clear:hover:not(:disabled),
 .display__clear:focus-visible:not(:disabled) {
+  background: var(--signal);
   color: var(--paper);
-  background: var(--ink);
-}
-
-.display__clear:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
+  border-bottom-color: var(--signal);
 }
 
 .display__clear:disabled {
-  opacity: 0.35;
+  color: var(--ink-50);
+  border-bottom-color: var(--ink-50);
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -601,12 +609,18 @@ button {
   --rotary-number-radius: var(--rotary-hole-radius);
   /*
    * 実機の数字配置に揃える回転基準。
-   * 数字穴の論理位置は digitToAngle(N) = N×36° で、これを止め金（5時方向）から
-   * 反時計回り N×36° + 18° の位置に表示する。
-   * 表示位置 = base - digit_angle、base = 150° - 18° = 132°
-   * これにより「1」が3時方向、「0」が止め金のすぐ手前、止め金が5時方向となる。
+   * 数字穴は 30° 間隔で 10 個並び（合計 270°）、残る 90° は穴のない
+   * 「指止め用の隙間」。止め金は「0」と「1」の間（「1」寄り）に置かれる。
+   *
+   * 数字穴 N の論理位置 (digitToAngle(N) = N×30°) を、止め金（5時方向 / 150°）から
+   * 反時計回りに N×30° 回した実画面位置に配置する: 表示位置 = base - N×30°
+   * base = stop = 150° として:
+   *   1 → 120° (4時)、2 → 90° (3時)、3 → 60° (2時)、4 → 30° (1時)、
+   *   5 → 0° (12時)、6 → 330° (11時)、7 → 300° (10時)、8 → 270° (9時)、
+   *   9 → 240° (8時)、0 → -150°≡210° (7時)。
+   * 止め金は 150°（5時方向）で「1」(120°) の 30° CW・「0」(210°) の 60° CCW にある。
    */
-  --rotary-base-rotation: 132deg;
+  --rotary-base-rotation: 150deg;
   --rotary-stop-angle: 150deg;
 
   position: relative;
