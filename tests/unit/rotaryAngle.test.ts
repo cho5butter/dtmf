@@ -15,7 +15,7 @@ describe("rotaryAngle", () => {
     expect(angleToDigit(150)).toBe("5");
   });
 
-  test("zero has the longest black-phone travel (NTT 600 形・30°×10=300°)", () => {
+  test("zero has the longest black-phone travel (NTT 600 形・30°×10+30°=330°)", () => {
     expect(digitToAngle("1")).toBe(30);
     expect(digitToAngle("9")).toBe(270);
     expect(digitToAngle("0")).toBe(300);
@@ -23,16 +23,18 @@ describe("rotaryAngle", () => {
     expect(angleToDigit(300)).toBe("0");
   });
 
-  test("finger stop coincides with the dialed digit's full rotation (no half-step offset)", () => {
-    // 実機: 止め金は数字穴 N から時計回りに N ステップ先 (=N×30°) 回した位置にある。
-    // よって fingerStopAngle(digitToAngle(N)) === digitToAngle(N)。
-    expect(fingerStopAngle(digitToAngle("1"))).toBe(30);
-    expect(fingerStopAngle(digitToAngle("5"))).toBe(150);
-    expect(fingerStopAngle(digitToAngle("0"))).toBe(300);
+  test("finger stop is one step (30°) beyond the dialed digit's hole (P3-12)", () => {
+    // 実機（フェイス 1=2時 / 0=5時 / 止め金 4時）の物理対応:
+    // 止め金は数字穴 N から CW に (N+1) ステップ先にあり、回転量 = N×30° + 30°。
+    // よって fingerStopAngle(digitToAngle(N)) === digitToAngle(N) + 30°。
+    expect(fingerStopAngle(digitToAngle("1"))).toBe(60);
+    expect(fingerStopAngle(digitToAngle("5"))).toBe(180);
+    expect(fingerStopAngle(digitToAngle("0"))).toBe(330);
   });
 
   test("finger stop and return", () => {
     const stop = fingerStopAngle(90);
+    expect(stop).toBe(120);
     expect(returnAngle(stop)).toBe(0);
   });
 

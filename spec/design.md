@@ -1368,6 +1368,92 @@ P3-10 で追加した Clear ボタンは `2px solid var(--ink)` の厚枠 + `min
 Clear ボタン体裁はビジュアル要素のため、既存の `tests/component/NumberInput.test.tsx`
 （`data-testid="clear-button"` / `isClearDisabled()` 等）には変更なし。
 
+> **⚠ P3-11 改訂注記（2026-05-23 / P3-12 にて適用）**:
+> 上記 P3-11 の値（`base=150°` / `stop=150°` / `FINGER_STOP_OFFSET=0°` / `1=4時` / `0=7時` / 止め金 5 時で「1」寄り）はリリース後のレビューで
+> 「画像どおりにすべき。1 は 2 時、0 は 5 時、止め金は 4 時付近（0 寄り）」と再指摘された。
+> P3-12 で **`base=90°` / `stop=120°` / `FINGER_STOP_OFFSET=30°` / `1=2時` / `0=5時` / 止め金 4 時で「0」寄り**
+> に改訂された（典型的な NTT 600 形・WE 500 のフェイス向き）。
+> Clear ボタン体裁も P3-11 の `display__meta` 行内インライン（下線のみ）から
+> P3-12 で **`.display__row` 内の側列ボタン（hair border + hard shadow）** に再刷新された。詳細は P3-12 を参照。
 
+## P3-12. 回転ダイヤルの向き再校正と Clear ボタンの側列配置（Phase 3 補正 / 2026-05-23）
 
+> 経緯: P3-11 適用後のレビューで「画像のように配置すべき。回転がおかしい」「Clear ボタンがダサい・他のボタンと質感を合わせ、入力欄の右側に置け」と再指摘された。
+> 物理モデル（30° 刻み・10 穴で 270° 弧・90° 隙間）は P3-11 を踏襲し、フェイスの **向き**（base / stop の絶対角）のみを実機写真と一致するよう変更する。
 
+### 12-1. フェイス向きの再校正
+
+実機 NTT 600 / WE 500 系の典型的なフェイス向きに揃える。論理モデル（穴間隔・隙間の幅）は据置で、表示基準角のみを移動する。
+
+| 項目 | 旧 (P3-11) | 新 (P3-12) | 説明 |
+|------|-----------|------------|-----|
+| `--rotary-base-rotation` | `150deg` | **`90deg`** | 数字穴の表示基準。`rotate(base − N×30°)` で N の穴・数字を実画面上に配置 |
+| `--rotary-stop-angle` | `150deg` | **`120deg`** | 指止めの表示角度（4 時方向） |
+| `FINGER_STOP_OFFSET` | `0°` | **`30°`** | `stop − base = 30°`。N の穴は `N×30° + 30°` 回転で止め金に到達 |
+| `fingerStopAngle(d)` | `d` | **`d + 30°`** | 1 ステップ分のオフセットを追加 |
+| 回転量 | `N × 30°` | **`N × 30° + 30°`** | 1→60°、5→180°、0→330° |
+
+新たな表示位置:
+
+| 数字 | 表示角度 (12時を 0°、時計回り) | 視覚的位置 |
+|------|------|-----------|
+| 1 | `90° − 30° = 60°` | 2 時 |
+| 2 | 30° | 1 時 |
+| 3 | 0° | 12 時（最上部） |
+| 4 | 330° | 11 時 |
+| 5 | 300° | 10 時 |
+| 6 | 270° | 9 時 |
+| 7 | 240° | 8 時 |
+| 8 | 210° | 7 時 |
+| 9 | 180° | 6 時（最下部） |
+| 0 | `90° − 300° ≡ 150°` | 5 時 |
+| 止め金 | 120° | 4 時 |
+| 隙間（穴なし） | 「1」(60°) → 120°(止め金) → 「0」(150°) の 90° 弧 | 右下 |
+
+回転量と戻り時間（戻りは P3-9 のガバナ等速モデルを踏襲、所要時間も据置）:
+- 「1」: 巻き上げ 60° → 100ms 戻り + 1 パルス
+- 「5」: 巻き上げ 180° → 500ms 戻り + 5 パルス
+- 「0」: 巻き上げ 330° → 1000ms 戻り + 10 パルス
+
+### 12-2. Clear ボタンの側列配置（`display__row`）
+
+P3-11 で `display__meta` 行内のインライン下線テキストに変更したが、再レビューで「ダサい」「他の物理ボタン（`rotary__aux-btn` / `t-btn`）と質感が違う」「入力欄の右側に置くべき」と指摘された。
+
+| 項目 | 旧 (P3-11) | 新 (P3-12) |
+|------|----|----|
+| マークアップ | `<header class="display__meta">` 内に status・clear・count を並置 | `<header class="display__meta">` には status・count のみ。`<div class="display__row">` で `display__screen` と `display__clear` を flex 並置（隠し input も同 row 内に配置） |
+| 枠 | 下線のみ `border-bottom: 2px solid var(--signal)` | **`var(--hair)` 全周** + **`var(--shadow-hard)`** |
+| 配色（idle） | `var(--signal)` 前景 | `var(--ink)` 前景・`var(--paper)` 背景 |
+| 配色（hover/focus） | signal 反転 | signal 反転（前景 `var(--paper)`） |
+| 配色（active） | — | `translate(4px, 4px)` でシャドウ消し + signal 反転（`rotary__aux-btn` と同パターン） |
+| 配色（disabled） | `--ink-50` 着色 + opacity 0.45 | `var(--paper)` 背景 + `--ink-50` 前景 + opacity 0.35 |
+| サイズ | padding `6px 10px`・min なし | `min-width: 56px`・高さは `.display__row` の `align-items: stretch` で `.display__screen` に追従（実測 ≥ 88px → 44×56 タップ域を満たす） |
+| 配置 | `.display__meta` 中央列 | `.display__screen` の右隣（flex の 2 列目、`flex-shrink: 0`） |
+
+`.display__row` の構造:
+```css
+.display__row {
+  position: relative;          /* .display__hidden-input の inset:0 アンカー */
+  display: flex;
+  align-items: stretch;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.display__screen { flex: 1 1 auto; min-width: 0; }
+.display__clear  { flex: 0 0 auto; }
+```
+
+`.display__hidden-input` の親アンカーが `.display` から `.display__row` に変わるが、`pointer-events: none` のまま（クリックは `.display__screen` の onClick が JS でフォーカスを `.display__hidden-input` に転送する既存挙動を踏襲）。
+
+### 12-3. テスト改訂
+
+`tests/unit/rotaryAngle.test.ts`:
+- `fingerStopAngle(digitToAngle("1"))` → `60`（旧 30）
+- `fingerStopAngle(digitToAngle("5"))` → `180`（旧 150）
+- `fingerStopAngle(digitToAngle("0"))` → `330`（旧 300）
+- `fingerStopAngle(90)` → `120`（旧 90）。`returnAngle(stop) === 0` は維持
+- 「N の穴は N×30° で止め金に到達」テストを「N×30°+30° で到達」に書き換え
+- 「30° 間隔」「10 穴で 270° 弧 / 90° 隙間」のテストは据置
+
+`tests/component/NumberInput.test.tsx` の API レベルテスト（`isClearDisabled` / `historyItemLabel` / `data-testid` 等）は据置。
+ソース文字列マッチ（`'data-testid="clear-button"'` 等）はそのまま満たされる。

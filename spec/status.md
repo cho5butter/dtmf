@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / 計画 P3-J 進行中）
-**ステータス**: ユーザー報告「Clear ボタンがダサい」「回転で数字が均等配置されるのはおかしい・ストッパーは 0 と 1 の間」を受けて、設計 P3-11 を `spec/` に追加。回転ダイヤルを 30° 刻み・90° 隙間モデル（NTT 600 形完全準拠）に再校正し、Clear ボタンを `display__meta` 行の活字タイポに揃えた。
+**フェーズ**: 実装（Phase 3 補正 / 計画 P3-J 完了）
+**ステータス**: ユーザー再指摘「回転の数字配置がおかしい（画像どおりにすべき）」「Clear ボタンがダサい・他のボタンと質感を合わせて入力欄の右側に置け」を受けて、設計 P3-12 / 計画 P3-J を `spec/` に追加。フェイス向きを実機写真どおりに再校正（1=2時 / 0=5時 / 止め金 4時 / 3=12時 / 9=6時）し、Clear ボタンを `rotary__aux-btn` と同じハードシャドウ＋hair枠の側列ボタンへ刷新、`display__screen` の右隣（`.display__row`）に配置した。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -67,7 +67,7 @@
 - `spec/design.md` に P3-10 セクションを追加、`spec/plan.md` に計画 P3-I を追加
 - `PhoneApp.tsx` / `NumberInput.tsx` 修正、新規テスト 8 件
 
-*回転ダイヤル 30° 刻み再校正 + Clear ボタン体裁刷新（本 PR / 2026-05-23）*:
+*回転ダイヤル 30° 刻み再校正 + Clear ボタン体裁刷新（PR #37 マージ済）*:
 - ユーザー指摘「回転で数字が均等配置されるのはおかしい」「ストッパーは 0 と 1 の間」「Clear ボタンがダサい」
 - `spec/requirements.md` F-003 を改訂（30° 刻み・90° 隙間・止め金は 0/1 間「1」寄り）
 - `spec/design.md` に P3-11 セクションを追加（P3-9 へ改訂注記）
@@ -76,9 +76,17 @@
 - `tests/unit/rotaryAngle.test.ts` を新ジオメトリに合わせて改訂・拡充（隙間 90° の検証追加）
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.81 KB gzip）
 
+*フェイス向き再校正 + Clear ボタン側列配置（本 PR / 2026-05-23）*:
+- ユーザー再指摘「回転の数字配置がおかしい（画像どおりにすべき）」「Clear ボタンがダサい・他のボタンと質感を合わせて入力欄の右側に置け」
+- `spec/requirements.md` F-003 / F-019 を改訂、`spec/design.md` に P3-12 を追加（P3-11 へ改訂注記）、`spec/plan.md` に計画 P3-J を追加
+- `rotaryAngle.ts`: `FINGER_STOP_OFFSET` 0 → 30（止め金は数字穴 N の N+1 ステップ先）
+- `global.css`: `--rotary-base-rotation` 150 → 90、`--rotary-stop-angle` 150 → 120。Clear ボタンを `.rotary__aux-btn` と同じ hair 枠 + hard shadow に刷新、`.display__row` を追加して `.display__screen` の右隣に配置（隠し input も同 row 内に移動）
+- `tests/unit/rotaryAngle.test.ts` を新オフセット（N×30°+30°）に合わせて改訂
+- `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
+
 **次のアクション**:
 1. 本ブランチを push し draft PR を作成
-2. PR レビュー → マージ後、GitHub Pages 上で回転ダイヤルの数字配置とストッパー位置を実機確認
+2. PR レビュー → マージ後、GitHub Pages 上で「3 が最上部・1 が 2 時・0 が 5 時・止め金 4 時」の配置と Clear ボタンの押下感を実機確認
 3. ユーザーから追加フィードバックがあれば対応
 
 **ブロッカー・懸念事項**:
