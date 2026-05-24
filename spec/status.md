@@ -43,6 +43,16 @@
 
 **最後に実施したこと**:
 
+*UI ヘルパー文言の削除（本ブランチ / 2026-05-24）*:
+- ユーザー指示「回転ヒント・操作説明・フッター注記・GitHub リンクを UI から削除」
+- `Footer.astro` 削除、`index.astro` からフッター参照を除去
+- `RotaryDial.tsx` の `rotary__hint` を削除
+- `NumberInput.tsx` の操作説明ヒントを削除（国際番号 `+` のみ条件表示を維持）
+- 未使用 CSS（`.rotary__hint` / `.site-footer`）を整理
+- `bash scripts/quality-gate.sh` PASS
+
+**以前の実施内容**:
+
 *既存（`main` マージ済み）*:
 - 回転ダイヤル「止め金まで回る → 指離し → 戻り」、波形同期、PC レイアウト再構成
 - `SettingsPanel` / `DetailPanel` を PC 幅（>=1024px）でデフォルト展開

@@ -1174,33 +1174,6 @@ button {
   color: var(--paper);
 }
 
-/* ─────────── Footer ─────────── */
-
-.site-footer {
-  padding: var(--s-6) 0 var(--s-4);
-  border-top: var(--hair);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-50);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-3);
-  justify-content: space-between;
-}
-
-.site-footer a {
-  color: var(--ink);
-  text-decoration: none;
-  border-bottom: 2px solid var(--ink);
-}
-
-.site-footer a:hover {
-  color: var(--signal);
-  border-bottom-color: var(--signal);
-}
-
 /* ─────────── Reduced motion ─────────── */
 
 @media (prefers-reduced-motion: reduce) {
