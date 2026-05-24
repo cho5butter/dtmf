@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / カスタムドメイン piporu.c5bt.jp 対応）
-**ステータス**: ユーザー報告「piporu.c5bt.jp でロゴが壊れ、ダイヤルパッドが表示されない」に対応。原因は `astro.config.mjs` の `base: "/dtmf/"` 設定によりアセット参照が `/dtmf/...` に固定され、ルート配信のカスタムドメインで全アセットが 404 になっていたこと。`site` を `https://piporu.c5bt.jp` に変更し `base` を撤去、`public/CNAME` を追加して GitHub Pages のカスタムドメイン設定をビルド成果物に含めた。
+**フェーズ**: 実装（Phase 3 補正 / ロゴ再描画）
+**ステータス**: ユーザー再指摘「添付ロゴ画像と現状の SVG が乖離している。背景透過で添付ロゴと同一になるように」に対応。`cairosvg` で実際の SVG 描画結果を確認し、従来の電話アイコンが「目覚まし時計」状になっていたことを特定。受話器を horizontal handset（dog-bone）形状に作り替え、ボディを明確な角丸長方形に再構成、ダイヤル穴を真円配置に補正してロゴ・ファビコン 5 ファイルすべてを更新。背景は SVG のためそもそも透過（PNG 化は不要と判断）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -43,7 +43,22 @@
 
 **最後に実施したこと**:
 
-*カスタムドメイン piporu.c5bt.jp 対応（本ブランチ / 2026-05-24）*:
+*ロゴ・ファビコン再描画（本ブランチ `claude/exciting-turing-kBfEU` / 2026-05-24）*:
+- ユーザー指摘「ロゴが乖離している。PNG のまま背景を透過するなど添付ロゴと同一に」
+- `pip install cairosvg` で SVG → PNG レンダリング環境を整備し、既存 SVG の描画結果を実機相当で確認
+- 確認結果: 受話器の小さな耳パスと細い arch のため「目覚まし時計」風に見えていた（→ ロータリーフォンとして認識されない）
+- 反復改善（iter1〜iter6）で形状を調整し、最終形を採用:
+  - **受話器**: 横向きの dog-bone（handset）形状。両端を半径 7 の弧で太く、中央バーを明確に薄くして「電話の受話器」と一目で分かるシルエットに
+  - **ボディ**: 単一の角丸長方形パスに統一（従来の複雑な底面 cradle + arch の入れ子構造を撤廃）
+  - **ダイヤル**: 中心 (34,42)・半径 14 の真円。指穴は半径 9.5 の真円上に 36° 等間隔で 10 個配置（従来は不揃いだった）
+  - **指止め**: 5 時方向の小タブを維持
+  - **赤の波形**: 3 本の凹弧で「鳴っている感」を強調
+- 適用ファイル: `public/logo-piporu-dark.svg` / `logo-piporu-light.svg` / `favicon.svg` / `favicon-dark.svg` / `favicon-light.svg`（5 ファイル）
+- `viewBox` は既存値（横長 360×72 / 正方形 64×64）を維持し、`BrandLogo.astro` / `Head.astro` への変更は不要
+- 背景: SVG はもともと透過（`fill` を背景に持たない）。`cairosvg.svg2png` で `background_color` を指定せずに出力すると alpha 透過 PNG になることを確認
+- 品質ゲート PASS（84 tests / 20.99 KB gzip）
+
+*カスタムドメイン piporu.c5bt.jp 対応（前回 / 2026-05-24）*:
 - ユーザー報告: `piporu.c5bt.jp` でヘッダーとフッター（`© 2026`）以外が表示されず、ロゴが壊れた画像アイコンになっていた
 - 原因: `astro.config.mjs` の `site: "https://cho5butter.github.io"` / `base: "/dtmf/"` により、ロゴ・JS バンドル・CSS が `/dtmf/...` 参照で生成。ルート配信のカスタムドメインで全て 404 → Solid アイランド（`PhoneApp`）も読み込めない
 - 修正: `site` を `https://piporu.c5bt.jp` に変更し `base` を撤去（=`/`）。`public/CNAME` に `piporu.c5bt.jp` を追加（GitHub Pages のカスタムドメイン設定をデプロイ成果物に含めて永続化）
@@ -122,9 +137,9 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 本ブランチ（`claude/deployment-issue-SRIkp`）を push し draft PR を作成
-2. PR マージ後、`piporu.c5bt.jp` でロゴ・ダイヤルパッドが正常に表示されることを確認
-3. GitHub Pages 設定画面のカスタムドメインが `piporu.c5bt.jp` のまま保持されていることを確認（CNAME ファイル追加により永続化される想定）
+1. 本ブランチ `claude/exciting-turing-kBfEU` を push し draft PR を作成
+2. PR マージ後、`piporu.c5bt.jp` で新しいロータリーフォン形ロゴが正しく表示されることを確認
+3. もし「まだ添付画像と違う」というフィードバックがあれば、ユーザーに具体的な乖離点（受話器の角度・ボディ比率・ダイヤル穴数・赤波形の本数 等）をヒアリングしてさらに反復改善する
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
