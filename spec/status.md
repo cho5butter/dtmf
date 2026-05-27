@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / ロゴ再描画）
-**ステータス**: ユーザー再指摘「添付ロゴ画像と現状の SVG が乖離している。背景透過で添付ロゴと同一になるように」に対応。`cairosvg` で実際の SVG 描画結果を確認し、従来の電話アイコンが「目覚まし時計」状になっていたことを特定。受話器を horizontal handset（dog-bone）形状に作り替え、ボディを明確な角丸長方形に再構成、ダイヤル穴を真円配置に補正してロゴ・ファビコン 5 ファイルすべてを更新。背景は SVG のためそもそも透過（PNG 化は不要と判断）。
+**フェーズ**: 実装（Phase 3 補正 / B-10 音量バグ修正）
+**ステータス**: ユーザー報告「iOS で音量を上げても音が鳴らない」を受けて根本原因を特定。`engine.setVolume(v)` が内部で `v²` 補正を行う仕様（`engine.test.ts` で固定）であるのに、呼び出し側 2 箇所（`PhoneApp.tsx` onMount / `SettingsPanel.tsx` onInput）が事前に `v²` を渡していたため、最終 `masterGain` が `v⁴` になっていた。デフォルト 50% で実 gain 6.25% となり iOS では事実上無音。要件 B-10・計画 P3-K を追加し、TDD で修正完了。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -43,7 +43,18 @@
 
 **最後に実施したこと**:
 
-*ロゴ・ファビコン再描画（本ブランチ `claude/exciting-turing-kBfEU` / 2026-05-24）*:
+*B-10 音量の二重二乗バグ修正（本ブランチ `claude/relaxed-albattani-PBn3O` / 2026-05-27）*:
+- ユーザー報告「音がならないケースがあります。IOS で音量を上げても音がなりませんでした。」
+- 調査: `src/lib/dtmf/engine.ts:259-263` の `setVolume` は知覚音量補正として内部で `v²` を実施。呼び出し側 `src/islands/PhoneApp.tsx:128` (`engine.setVolume(volume ** 2)`) と `src/islands/SettingsPanel.tsx:72` (`engine.setVolume(v * v)`) が**さらに事前二乗**していたため、最終 `masterGain` が `v⁴` になっていた（デフォルト UI 50% → 6.25% gain）
+- `spec/requirements.md` に **B-10** を追加（高優先度欠陥）。`spec/plan.md` に **計画 P3-K** を追加
+- TDD: 先に `tests/component/volumeContract.test.tsx` を作成し RED 確認 → 呼び出し側 2 行を線形値渡しに修正 → GREEN
+  - `engine.test.ts` に境界テスト 2 件追加（`setVolume(1)→1.0` / `setVolume(0)→0`）
+  - `volumeContract.test.tsx`: ソースコードレベルで `engine.setVolume(...)` の引数に `** 2` / `v * v` が含まれないことを保証 + デフォルト設定 0.5 で gain 0.25 になることを確認
+- 実装: `PhoneApp.tsx` / `SettingsPanel.tsx` をそれぞれ 1 行修正（線形値をそのまま渡す）
+- `bash scripts/quality-gate.sh` PASS（89 tests / 20.99 KB gzip）
+- 残課題（別チケット化候補）: iOS サイレントスイッチで Web Audio が黙る問題（`AudioContext` の `playback` セッション化ハック未実装）。`appState.audio.contextSuspended` も初期値 `false` のまま観測されていないため、「音を有効にしてください」バナーが表示されない
+
+*ロゴ・ファビコン再描画（前回 `claude/exciting-turing-kBfEU` / 2026-05-24）*:
 - ユーザー指摘「ロゴが乖離している。PNG のまま背景を透過するなど添付ロゴと同一に」
 - `pip install cairosvg` で SVG → PNG レンダリング環境を整備し、既存 SVG の描画結果を実機相当で確認
 - 確認結果: 受話器の小さな耳パスと細い arch のため「目覚まし時計」風に見えていた（→ ロータリーフォンとして認識されない）
@@ -137,9 +148,9 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 本ブランチ `claude/exciting-turing-kBfEU` を push し draft PR を作成
-2. PR マージ後、`piporu.c5bt.jp` で新しいロータリーフォン形ロゴが正しく表示されることを確認
-3. もし「まだ添付画像と違う」というフィードバックがあれば、ユーザーに具体的な乖離点（受話器の角度・ボディ比率・ダイヤル穴数・赤波形の本数 等）をヒアリングしてさらに反復改善する
+1. 本ブランチ `claude/relaxed-albattani-PBn3O` を push し draft PR を作成
+2. PR マージ後、ユーザーに iOS 実機で **音量スライダー初期値 50% のまま** 音が明確に聴こえることを確認してもらう
+3. それでも「サイレントスイッチで鳴らない」場合は、別の要件 B-11 として iOS Web Audio の `playback` セッション化対応を起票して進める
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる

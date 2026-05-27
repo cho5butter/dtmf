@@ -82,6 +82,25 @@ describe("DtmfEngine", () => {
     expect(master?.gain.value).toBe(0.25);
   });
 
+  // B-10 回帰: 呼び出し側は線形値（0〜1）を渡す契約。エンジン内部で v² を適用する。
+  test("setVolume(1.0) yields master gain 1.0 (no double-squaring)", async () => {
+    const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
+    await engine.ensureContext();
+    engine.setVolume(1);
+    engine.pressKey("0");
+    const master = fake.createdNodes.gains[0];
+    expect(master?.gain.value).toBe(1);
+  });
+
+  test("setVolume(0) yields master gain 0", async () => {
+    const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
+    await engine.ensureContext();
+    engine.setVolume(0);
+    engine.pressKey("0");
+    const master = fake.createdNodes.gains[0];
+    expect(master?.gain.value).toBe(0);
+  });
+
   test("getAnalyser returns node", async () => {
     const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
     await engine.ensureContext();
