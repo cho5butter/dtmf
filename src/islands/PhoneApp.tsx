@@ -125,7 +125,7 @@ export default function PhoneApp() {
       const banner = document.getElementById("audio-unsupported");
       if (banner) banner.style.display = "block";
     }
-    engine.setVolume(appState.settings.volume ** 2);
+    engine.setVolume(appState.settings.volume);
     document.addEventListener("keydown", handleKeyboard);
     document.addEventListener("keyup", handleKeyboard);
   });

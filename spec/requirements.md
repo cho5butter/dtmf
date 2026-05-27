@@ -481,9 +481,13 @@ Phase 2 で「ミニマル統一デザイン（F-011〜F-013）」を導入し�
 | ID | バグ概要 | 関連要件 | 優先度 |
 |----|---------|---------|--------|
 | B-09 | スマホ仮想キーボードで `<input type="tel">` に数字を入力すると、`PhoneApp.tsx` の document-level `handleKeyboard` が DTMF キーとして `recordDialKey()` を実行し、さらに仮想キーボードが `preventDefault` を無視して文字を挿入するため、`raw` に同じ数字が二重に追加される | F-002, F-017 | 高 |
+| B-10 | `engine.setVolume(v)` は内部で `v * v`（知覚音量補正）を行うが、呼び出し側（`PhoneApp.tsx` onMount、`SettingsPanel.tsx` onInput）が **既に二乗した値** を渡しているため、最終的な `masterGain.gain.value` が `v⁴` になる。デフォルト UI 音量 50% の場合、実 gain は 6.25% となり、特に iOS の Web Audio 出力では事実上無音に近く「音が鳴らない」と知覚される | F-005 | 高 |
 
 **受け入れ基準:**
 - [x] B-09: `handleKeyboard` 内で `inFormField`（フォーカスが `<input>` / `<textarea>` 上）かつキーが DTMF キーの場合は、document-level の `recordDialKey` / `playDigitSequence` を実行せず、ネイティブ input イベントに委譲する。Enter / Escape はこれまで通り処理する
 - [x] B-09: モバイル仮想キーボードからの数字入力で、最終的な `appState.raw` が入力された桁数と一致すること（unit test で `handleKeyboard` 経由のシミュレーションを追加）
 - [x] B-09: PC 物理キーボードでの数字キー押下時の挙動（入力欄外で押下 → 番号欄に追記、`onKeyUp` で音再生）は維持される
+- [x] B-10: `engine.setVolume` の呼び出し側は **線形の UI 音量値（0〜1）をそのまま** 渡すこと。エンジン内部で `v²` 補正を行うため、二乗するのはエンジンのみ
+- [x] B-10: UI 音量 50% で `masterGain.gain.value === 0.25`（`v² = 0.25`）となる（unit test で検証）
+- [x] B-10: SettingsPanel のスライダー操作で値を変更したとき、`engine.setVolume` には常に線形値（0〜1）が渡されることを保証する（呼び出し契約テスト）
 

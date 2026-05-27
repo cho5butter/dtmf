@@ -69,7 +69,7 @@ export default function SettingsPanel() {
             onInput={(e) => {
               const v = Number((e.currentTarget as HTMLInputElement).value) / 100;
               setSettings({ volume: v });
-              engine.setVolume(v * v);
+              engine.setVolume(v);
             }}
             aria-label="音量"
             data-testid="volume"

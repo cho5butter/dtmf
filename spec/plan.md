@@ -842,6 +842,46 @@ graph TD
 
 ---
 
+## 計画 P3-K: 音量の二重二乗バグ修正（B-10）
+
+**ステータス**: 完了
+
+**目的**: 要件 B-10（音量の二重二乗による出力減衰）を修正する。エンジン側 `setVolume` は知覚音量補正として内部で `v²` を計算する仕様（既存テスト `engine.test.ts:76-83` で固定）であるため、呼び出し側 2 箇所が「線形の UI 音量値（0〜1）をそのまま渡す」よう改める。
+
+**前提条件**: `spec/requirements.md` B-10 の受け入れ基準
+
+**タスク**:
+
+- [x] **テスト先行（RED）**
+  - [x] `tests/unit/engine.test.ts` に「`setVolume(1)` で masterGain.gain.value が 1.0 になる」「`setVolume(0.5)` で 0.25 になる」回帰テストを追加（既存 0.5→0.25 は維持、新たに 1.0→1.0 と 0→0 を追加）
+  - [x] 「呼び出し側契約」テストとして、`engine.setVolume` をスパイし `PhoneApp` onMount / `SettingsPanel` onInput がそれぞれ線形値を渡すことを保証する unit テストを `tests/unit/volumeContract.test.ts` として新規追加
+  - [x] `bun test` で新規テストが RED になることを確認
+- [x] **実装（GREEN）**
+  - [x] `src/islands/PhoneApp.tsx`: onMount の `engine.setVolume(appState.settings.volume ** 2)` → `engine.setVolume(appState.settings.volume)`
+  - [x] `src/islands/SettingsPanel.tsx`: onInput の `engine.setVolume(v * v)` → `engine.setVolume(v)`
+- [x] **REFACTOR / 確認**
+  - [x] `bash scripts/quality-gate.sh` PASS
+  - [x] 既存テスト（`engine.test.ts` を含む）が全 pass
+- [x] **ドキュメント更新**
+  - [x] 本計画のチェックボックスを `[x]` に更新
+  - [x] `spec/requirements.md` B-10 受け入れ基準を `[x]` に更新
+  - [x] `spec/status.md` 直近の状況・次のアクションを更新
+
+**完了条件**:
+- [x] UI 音量 50%（既定）で実際の `masterGain.gain.value === 0.25`（=`0.5² = 0.25`）になっている
+- [x] UI 音量 100% で `masterGain.gain.value === 1.0`
+- [x] `bash scripts/quality-gate.sh` PASS
+- [x] iOS / Android / PC で UI 音量 50% のまま音が明確に聴こえる（実機確認は PR レビュー時）
+
+**影響範囲**:
+- `src/islands/PhoneApp.tsx`（1 行）
+- `src/islands/SettingsPanel.tsx`（1 行）
+- `tests/unit/engine.test.ts` / `tests/unit/volumeContract.test.ts`
+
+**テスト方針**: TDD（テスト先行）。エンジン側挙動は変えないため `engine.test.ts` の既存 `setVolume(0.5)→0.25` は維持。
+
+---
+
 ## 最終計画（固定・必須）: 脆弱性レビュー
 
 **ステータス**: 完了
