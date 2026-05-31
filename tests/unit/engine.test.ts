@@ -107,6 +107,14 @@ describe("DtmfEngine", () => {
     expect(engine.getAnalyser()).not.toBeNull();
   });
 
+  // B-11: onMount で suspended を観測してバナーを出すため、状態を返せること
+  test("getContextState reflects the AudioContext state (suspended -> running)", async () => {
+    const engine = createDtmfEngine({ createContext: () => fake as unknown as AudioContext });
+    expect(engine.getContextState()).toBe("suspended");
+    await engine.ensureContext();
+    expect(engine.getContextState()).toBe("running");
+  });
+
   test("isSupported false without AudioContext", () => {
     injectAudioContextConstructor(null);
     const engine = createDtmfEngine();

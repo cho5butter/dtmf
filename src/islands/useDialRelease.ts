@@ -2,14 +2,17 @@ import { createDialBuffer, playDigitSequence } from "../lib/dtmf/dialBuffer";
 import type { DtmfEngine } from "../lib/dtmf/engine";
 import type { DtmfKey } from "../lib/dtmf/frequencyMap";
 import { recordDialKey } from "../lib/state/dialActions";
-import { appState, setPlayback } from "../lib/state/store";
+import { appState, setContextSuspended, setPlayback } from "../lib/state/store";
 
 const rotaryBuffer = createDialBuffer();
 
 export function usePadDialRelease(engine: DtmfEngine) {
   const onKeyDown = (key: DtmfKey, e: PointerEvent) => {
     e.preventDefault();
-    void engine.ensureContext().catch(() => {});
+    void engine
+      .ensureContext()
+      .then(() => setContextSuspended(false))
+      .catch(() => setContextSuspended(true));
     recordDialKey(key);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };

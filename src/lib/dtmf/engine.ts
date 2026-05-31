@@ -3,6 +3,7 @@ import {
   createAudioContext,
   getAudioContextConstructor,
 } from "../platform/audioContextFactory";
+import { configureAudioSessionForPlayback } from "../platform/audioSession";
 import { computeEnvelopePoints } from "./envelope";
 import { DTMF_FREQUENCY_MAP, type DtmfKey, isDtmfKey } from "./frequencyMap";
 
@@ -19,6 +20,8 @@ export interface DtmfEngine {
   stopAll(): void;
   setVolume(v: number): void;
   getAnalyser(): AnalyserNode | null;
+  /** AudioContext の現在状態を返す（未生成時は生成して観測）。suspended 判定に使う。 */
+  getContextState(): AudioContextState | null;
   isSupported(): boolean;
 }
 
@@ -60,6 +63,9 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
       masterGain.gain.value = volume;
       masterGain.connect(analyser);
       analyser.connect(ctx.destination);
+      // B-11: iOS のサイレントスイッチ下でも本体スピーカーへ出力するため
+      // audioSession を playback に構成する（非対応環境では no-op）。
+      configureAudioSessionForPlayback();
     }
     return ctx;
   };
@@ -215,6 +221,8 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
     async ensureContext() {
       const audioCtx = getContext();
       if (!audioCtx) throw new Error("Web Audio API is not supported");
+      // ユーザージェスチャの度に再構成しておく（iOS で稀にリセットされるため）。
+      configureAudioSessionForPlayback();
       if (audioCtx.state === "suspended") {
         await audioCtx.resume();
       }
@@ -264,6 +272,11 @@ export function createDtmfEngine(deps: CreateDtmfEngineDeps = {}): DtmfEngine {
 
     getAnalyser() {
       return analyser;
+    },
+
+    getContextState() {
+      const audioCtx = getContext();
+      return audioCtx ? audioCtx.state : null;
     },
 
     isSupported() {
