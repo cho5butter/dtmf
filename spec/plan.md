@@ -882,6 +882,52 @@ graph TD
 
 ---
 
+## 計画 P3-L: スマホ本体スピーカーから音が出ないバグ修正（B-11）
+
+**ステータス**: 完了
+
+**目的**: 要件 B-11 を修正する。スマホ（特に iOS）で本体スピーカーから音が流れない問題に対し、2 点の対策を行う。
+1. **iOS サイレントスイッチ対策**: `navigator.audioSession.type = "playback"` を設定し、マナーモードでも本体スピーカーから再生する
+2. **アクティベーション導線の修復**: onMount で AudioContext の `suspended` 状態を観測し、「音を有効にしてください」バナーを実際に表示する（従来は `contextSuspended` 初期値 `false` 固定で永遠に出なかった）
+
+**前提条件**: `spec/requirements.md` B-11 の受け入れ基準
+
+**タスク**:
+
+- [x] **テスト先行（RED）**
+  - [x] `tests/unit/audioSession.test.ts`: `configureAudioSessionForPlayback` が `navigator.audioSession.type` を `"playback"` に設定する／非対応時 no-op／例外を握りつぶすことを検証
+  - [x] `tests/unit/engine.test.ts`: `getContextState()` が AudioContext の状態（suspended→running）を返すことを検証
+  - [x] `tests/component/audioSessionContract.test.tsx`: engine が `configureAudioSessionForPlayback` を、PhoneApp が `getContextState`/`setContextSuspended` を参照する契約をソースレベルで保証
+  - [x] `bun test` で新規テストが RED になることを確認
+- [x] **実装（GREEN）**
+  - [x] `src/lib/platform/audioSession.ts` を新規作成（`configureAudioSessionForPlayback`）
+  - [x] `src/lib/dtmf/engine.ts`: コンテキスト生成時と `ensureContext` で audioSession を構成。`getContextState()` を追加
+  - [x] `src/islands/PhoneApp.tsx`: onMount で suspended を観測しバナー表示要否を判定。keydown/auto 再生で resume 成功時にバナーをクリア
+  - [x] `src/islands/useDialRelease.ts` / `src/islands/RotaryDial.tsx`: タッチ操作の resume 成功時にもバナーをクリア
+- [x] **REFACTOR / 確認**
+  - [x] `bash scripts/quality-gate.sh` PASS
+  - [x] 既存テストが全 pass
+- [x] **ドキュメント更新**
+  - [x] 本計画のチェックボックスを `[x]` に更新
+  - [x] `spec/requirements.md` B-11 受け入れ基準を `[x]` に更新
+  - [x] `spec/design.md` に P3-13 セクションを追記
+  - [x] `spec/status.md` 直近の状況・次のアクションを更新
+
+**完了条件**:
+- [x] iOS のサイレントスイッチがオンでも本体スピーカーから DTMF 音が鳴る（実機確認は PR レビュー時）
+- [x] モバイルで AudioContext が suspended のとき「音を有効にしてください」バナーが表示され、タップ後にクリアされる
+- [x] `bash scripts/quality-gate.sh` PASS
+
+**影響範囲**:
+- `src/lib/platform/audioSession.ts`（新規）
+- `src/lib/dtmf/engine.ts`
+- `src/islands/PhoneApp.tsx` / `src/islands/useDialRelease.ts` / `src/islands/RotaryDial.tsx`
+- `tests/unit/audioSession.test.ts` / `tests/unit/engine.test.ts` / `tests/component/audioSessionContract.test.tsx`
+
+**テスト方針**: TDD（テスト先行）。`navigator.audioSession` は iOS 限定 API のため、ユニットでは注入した navigator-like で検証し、実機挙動は PR レビュー時に確認する。
+
+---
+
 ## 最終計画（固定・必須）: 脆弱性レビュー
 
 **ステータス**: 完了

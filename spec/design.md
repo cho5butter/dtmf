@@ -1457,3 +1457,29 @@ P3-11 で `display__meta` 行内のインライン下線テキストに変更し
 
 `tests/component/NumberInput.test.tsx` の API レベルテスト（`isClearDisabled` / `historyItemLabel` / `data-testid` 等）は据置。
 ソース文字列マッチ（`'data-testid="clear-button"'` 等）はそのまま満たされる。
+
+## P3-13. スマホ本体スピーカーから音が出ないバグ修正（B-11 / Phase 3 補正 / 2026-05-31）
+
+> 経緯: ユーザー報告「スマホの本体スピーカーから音が流れない」。B-10（音量二重二乗）修正後も発生する別系統の不具合として B-11 を起票。
+
+### 原因
+
+| # | 原因 | 詳細 |
+|---|------|------|
+| 1 | iOS サイレントスイッチで Web Audio が消音 | iOS Safari は既定で Web Audio を「着信音（ambient）」セッション扱いとし、本体側面のサイレント（マナー）スイッチがオンだと本体スピーカーから音が出ない |
+| 2 | アクティベーションバナーが出ない | `appState.audio.contextSuspended` 初期値 `false` 固定。onMount で AudioContext の `suspended` 状態を観測しておらず、「音を有効にしてください」バナーが永遠に表示されない |
+
+### 対策
+
+1. **audioSession=playback**: `src/lib/platform/audioSession.ts` に `configureAudioSessionForPlayback()` を新設し、`navigator.audioSession.type = "playback"` を設定する。`navigator.audioSession` 非対応環境（Android Chrome / デスクトップ等）では no-op。エンジンの AudioContext 生成時および `ensureContext`（ユーザージェスチャ毎）で呼ぶ。
+2. **suspended 観測**: `engine` に `getContextState(): AudioContextState | null` を追加。`PhoneApp` の onMount で `getContextState() === "suspended"` ならバナーを表示する。バナーのボタン・物理キー押下・ダイヤルタップ・自動再生のいずれかで `ensureContext` が resume に成功したら `setContextSuspended(false)` でバナーをクリアする。
+
+### 影響範囲
+
+- `src/lib/platform/audioSession.ts`（新規）
+- `src/lib/dtmf/engine.ts`（audioSession 構成 / `getContextState`）
+- `src/islands/PhoneApp.tsx` / `src/islands/useDialRelease.ts` / `src/islands/RotaryDial.tsx`（バナー表示・クリア）
+
+### 注記
+
+`navigator.audioSession` は iOS Safari 16.4+ の限定 API のため、TypeScript の `lib.dom` 型に含まれない。`audioSession.ts` 内で局所的にキャストして扱う。実機（iOS サイレントスイッチ ON）での発音確認は PR レビュー時に行う。

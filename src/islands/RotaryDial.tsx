@@ -10,7 +10,7 @@ import {
   returnDurationMs,
 } from "../lib/dtmf/rotaryAngle";
 import { useServices } from "../lib/state/context";
-import { appState, setPlayback } from "../lib/state/store";
+import { appState, setContextSuspended, setPlayback } from "../lib/state/store";
 import { usePadDialRelease, useRotaryDialRelease } from "./useDialRelease";
 
 const MAX_QUEUE = 20;
@@ -136,7 +136,10 @@ export default function RotaryDial() {
   };
 
   const dialDigit = (digit: string) => {
-    void engine.ensureContext().catch(() => {});
+    void engine
+      .ensureContext()
+      .then(() => setContextSuspended(false))
+      .catch(() => setContextSuspended(true));
     enqueueDigit(digit);
   };
 

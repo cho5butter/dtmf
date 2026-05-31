@@ -45,6 +45,7 @@ async function runAutoPlay() {
   recordPlaybackHistory();
   try {
     await engine.ensureContext();
+    setContextSuspended(false);
     await sequencer.start(appState.digits, {
       toneDurationMs: appState.settings.toneDurationMs,
       gapMs: appState.settings.gapMs,
@@ -99,7 +100,10 @@ export function handleKeyboard(e: KeyboardEvent) {
   if (e.type === "keydown" && !e.repeat) {
     e.preventDefault();
     heldKeys.add(key);
-    void engine.ensureContext();
+    void engine
+      .ensureContext()
+      .then(() => setContextSuspended(false))
+      .catch(() => setContextSuspended(true));
     recordDialKey(key);
     return;
   }
@@ -126,6 +130,11 @@ export default function PhoneApp() {
       if (banner) banner.style.display = "block";
     }
     engine.setVolume(appState.settings.volume);
+    // B-11: モバイル（特に iOS）では AudioContext が suspended のまま起動するため、
+    // 状態を観測して「音を有効にしてください」バナーの表示要否を判定する。
+    if (supported) {
+      setContextSuspended(engine.getContextState() === "suspended");
+    }
     document.addEventListener("keydown", handleKeyboard);
     document.addEventListener("keyup", handleKeyboard);
   });

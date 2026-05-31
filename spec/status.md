@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 3 補正 / B-10 音量バグ修正）
-**ステータス**: ユーザー報告「iOS で音量を上げても音が鳴らない」を受けて根本原因を特定。`engine.setVolume(v)` が内部で `v²` 補正を行う仕様（`engine.test.ts` で固定）であるのに、呼び出し側 2 箇所（`PhoneApp.tsx` onMount / `SettingsPanel.tsx` onInput）が事前に `v²` を渡していたため、最終 `masterGain` が `v⁴` になっていた。デフォルト 50% で実 gain 6.25% となり iOS では事実上無音。要件 B-10・計画 P3-K を追加し、TDD で修正完了。
+**フェーズ**: 実装（Phase 3 補正 / B-11 スマホ本体スピーカー無音バグ修正）
+**ステータス**: ユーザー報告「スマホの本体スピーカーから音が流れない」を受けて根本原因を特定。原因は 2 点。(1) iOS Safari が Web Audio を既定で「着信音」セッション扱いとし、サイレントスイッチ ON で無音（`navigator.audioSession.type` 未設定）。(2) `contextSuspended` 初期値 `false` 固定で onMount に suspended を観測しておらず、アクティベーションバナーが永遠に出ない。要件 B-11・計画 P3-L・設計 P3-13 を追加し、TDD で修正完了（B-10 とは別系統の不具合）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -43,7 +43,21 @@
 
 **最後に実施したこと**:
 
-*B-10 音量の二重二乗バグ修正（本ブランチ `claude/relaxed-albattani-PBn3O` / 2026-05-27）*:
+*B-11 スマホ本体スピーカー無音バグ修正（本ブランチ `claude/mobile-speaker-audio-VWgkg` / 2026-05-31）*:
+- ユーザー報告「スマホの本体スピーカーから音が流れない」（B-10 修正後も残る別系統の不具合）
+- 調査で原因 2 点を特定:
+  1. **iOS サイレントスイッチ**: iOS Safari は Web Audio を既定で「着信音（ambient）」セッション扱いとし、本体側面のサイレントスイッチ ON で無音。`navigator.audioSession.type` の設定箇所がコードに存在しなかった
+  2. **アクティベーションバナー不発**: `appState.audio.contextSuspended` が初期値 `false` 固定。onMount で AudioContext の `suspended` 状態を観測しておらず、「音を有効にしてください」バナーが永遠に表示されなかった
+- 要件 **B-11**（高優先度欠陥）/ 計画 **P3-L** / 設計 **P3-13** を追加
+- TDD: 先に `tests/unit/audioSession.test.ts`・`tests/component/audioSessionContract.test.tsx`・`engine.test.ts`（getContextState）を作成し RED 確認 → 実装 → GREEN
+- 実装:
+  - `src/lib/platform/audioSession.ts`（新規）: `configureAudioSessionForPlayback()`（`navigator.audioSession.type = "playback"`、非対応環境 no-op）
+  - `engine.ts`: AudioContext 生成時・`ensureContext` で audioSession 構成。`getContextState()` 追加
+  - `PhoneApp.tsx`: onMount で suspended 観測しバナー表示判定。keydown/自動再生で resume 成功時にバナークリア
+  - `useDialRelease.ts` / `RotaryDial.tsx`: タッチ操作の resume 成功時にもバナークリア
+- `bash scripts/quality-gate.sh` PASS（96 tests / 21.08 KB gzip）
+
+*B-10 音量の二重二乗バグ修正（前ブランチ `claude/relaxed-albattani-PBn3O` / 2026-05-27）*:
 - ユーザー報告「音がならないケースがあります。IOS で音量を上げても音がなりませんでした。」
 - 調査: `src/lib/dtmf/engine.ts:259-263` の `setVolume` は知覚音量補正として内部で `v²` を実施。呼び出し側 `src/islands/PhoneApp.tsx:128` (`engine.setVolume(volume ** 2)`) と `src/islands/SettingsPanel.tsx:72` (`engine.setVolume(v * v)`) が**さらに事前二乗**していたため、最終 `masterGain` が `v⁴` になっていた（デフォルト UI 50% → 6.25% gain）
 - `spec/requirements.md` に **B-10** を追加（高優先度欠陥）。`spec/plan.md` に **計画 P3-K** を追加
@@ -148,9 +162,10 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 本ブランチ `claude/relaxed-albattani-PBn3O` を push し draft PR を作成
-2. PR マージ後、ユーザーに iOS 実機で **音量スライダー初期値 50% のまま** 音が明確に聴こえることを確認してもらう
-3. それでも「サイレントスイッチで鳴らない」場合は、別の要件 B-11 として iOS Web Audio の `playback` セッション化対応を起票して進める
+1. 本ブランチ `claude/mobile-speaker-audio-VWgkg` を push し draft PR を作成
+2. PR マージ後、ユーザーに iOS 実機で **本体側面のサイレントスイッチを ON にしたまま** 本体スピーカーから DTMF 音が鳴ることを確認してもらう
+3. あわせて、初回ロード時に「音を有効にしてください」バナーが表示され、1 タップ後に消えることを確認してもらう
+4. それでも鳴らないケースがあれば、対象端末・OS/ブラウザバージョン・サイレントスイッチ状態を添えて再報告してもらう
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
