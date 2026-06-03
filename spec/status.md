@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 計画（Phase 4 / 初回アクセス時の音声警告モーダル F-020）
-**ステータス**: 要件 F-020（PR #52）・設計 P3-14（PR #53）はマージで承認済み。計画フェーズとして `spec/plan.md` に **計画 P4-A** を追加（TDD タスク: persistence ヘルパー → SoundWarningModal → CSS → PhoneApp 組込み）。ユーザーの承認待ち（承認後に実装フェーズへ）。
+**フェーズ**: 実装（Phase 4 / 初回アクセス時の音声警告モーダル F-020）
+**ステータス**: 要件 F-020（PR #52）・設計 P3-14（PR #53）・計画 P4-A（PR #54）はマージで承認済み。計画 P4-A を TDD で実装完了（テスト先行 RED → 実装 GREEN）。`bash scripts/quality-gate.sh` PASS（105 tests / 21.5 KB gzip）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -22,6 +22,10 @@
 [x] フェーズ2: 設計(Phase 3)
 [x] フェーズ3: 計画(Phase 3)
 [x] フェーズ4: 実装(Phase 3)
+[x] フェーズ1: 要件定義(Phase 4)
+[x] フェーズ2: 設計(Phase 4)
+[x] フェーズ3: 計画(Phase 4)
+[x] フェーズ4: 実装(Phase 4)
 ```
 
 ## フェーズ履歴
@@ -42,6 +46,18 @@
 ## 直近の状況
 
 **最後に実施したこと**:
+
+*初回アクセス時の音声警告モーダル実装（本ブランチ `claude/first-access-sound-warning-URwGb` / 2026-06-03）*:
+- ユーザー指示「初回アクセス時に音が鳴る旨の警告ポップアップを出してほしい」
+- フェーズゲートに沿って 要件 F-020（PR #52）→ 設計 P3-14（PR #53）→ 計画 P4-A（PR #54）を順に承認（各 PR マージ）取得
+- ユーザー確認により「モーダル / 初回のみ（localStorage 記憶）/ 既存の音有効化バナーとは独立（告知のみ）」と決定
+- TDD: 先に `tests/unit/persistence.test.ts`（`load/saveSoundWarningAck`・localStorage 不可時フォールバック）・`tests/component/soundWarningModal.test.tsx`（表示判定・a11y 属性・組込み契約）を作成し RED 確認 → 実装 → GREEN
+- 実装:
+  - `persistence.ts`: `STORAGE_KEYS.soundWarningAck`（スキーマ管理外）・`loadSoundWarningAck()`・`saveSoundWarningAck()` 追加
+  - `SoundWarningModal.tsx`（新規）: `shouldShowSoundWarning()` 判定、onMount で未確認時に表示・OK へフォーカス、`Escape`/OK で確認しフラグ保存、document keydown を capture で抑止（背後の DTMF/Enter 誤発火防止）、`onCleanup` で解除
+  - `PhoneApp.tsx`: `<SoundWarningModal />` を `Toast` 付近に追加
+  - `global.css`: `.sound-modal__overlay`（固定オーバーレイ z-index 1000）・`.sound-modal`（2px 枠＋ハードシャドウ＋角丸0）・出現アニメ（`prefers-reduced-motion` は既存グローバル規則で無効化）
+- `bash scripts/quality-gate.sh` PASS（105 tests / 21.5 KB gzip）
 
 *開いているマージリクエスト全件の main 取り込み（本セッション / 2026-06-03）*:
 - ユーザー指示「マージリクエストを全てマージして」を受け、open PR を確認し **#46 / #50 / #51 / #53 / #54** を対象化
@@ -174,10 +190,10 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 計画 P4-A（`spec/plan.md`）をユーザーに提示済み。**承認待ち**
-2. 承認後、実装フェーズへ進み TDD で実装（テスト先行 RED → persistence ヘルパー → SoundWarningModal → CSS → PhoneApp 組込み → GREEN）
-3. `bash scripts/quality-gate.sh` PASS を確認しコミット・プッシュ・PR
-4. 文言案「このアプリはボタン操作で音（電話のダイヤル音）が鳴ります。音量にご注意ください。」の可否も確認中
+1. 実装（計画 P4-A）をコミット・プッシュし、draft PR を作成
+2. PR の CI 通過を確認しレビュー対応
+3. マージ後、実機で初回アクセス時にモーダルが表示され、OK で閉じて 2 回目以降は出ないことを確認してもらう
+4. 将来文言を大きく変えて再告知したい場合は localStorage キーに `:v2` 等のサフィックスを付ける運用（設計 P3-14 注記）
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる

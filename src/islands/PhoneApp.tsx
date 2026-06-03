@@ -23,6 +23,7 @@ import NumberInput from "./NumberInput";
 import PlaybackControls from "./PlaybackControls";
 import RotaryDial from "./RotaryDial";
 import SettingsPanel from "./SettingsPanel";
+import SoundWarningModal from "./SoundWarningModal";
 import Toast from "./Toast";
 import Visualizer from "./Visualizer";
 
@@ -183,6 +184,7 @@ export default function PhoneApp() {
         <DetailPanel />
       </div>
       <Toast />
+      <SoundWarningModal />
       <div class="sr-only" aria-live="polite" id="playback-announcer">
         {appState.playback === "auto_running" && appState.currentDigitIdx >= 0
           ? `再生中: ${appState.digits[appState.currentDigitIdx]}`
