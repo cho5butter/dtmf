@@ -1169,6 +1169,57 @@ button {
   color: var(--paper);
 }
 
+/* ─────────── Sound warning modal (F-020) ─────────── */
+
+.sound-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--s-6);
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.sound-modal {
+  max-width: 420px;
+  width: 100%;
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-6);
+  border: var(--hair);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-hard);
+  animation: sound-modal-in 150ms ease-out;
+}
+
+.sound-modal__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sound-modal__desc {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+@keyframes sound-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ─────────── Reduced motion ─────────── */
 
 @media (prefers-reduced-motion: reduce) {

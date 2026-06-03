@@ -20,6 +20,9 @@ export const STORAGE_KEYS = {
   mode: "dtmf:mode",
   settings: "dtmf:settings",
   history: "dtmf:history",
+  // F-020: 初回アクセス時の音声警告モーダルの確認済みフラグ。
+  // スキーマバージョン管理とは独立のキーとし、設定リセットでも消えない。
+  soundWarningAck: "dtmf:soundWarningAck",
 } as const;
 
 const MAX_HISTORY = 5;
@@ -105,6 +108,26 @@ export function saveSettings(settings: PersistedSettings): void {
   try {
     storage.setItem(STORAGE_KEYS.schemaVersion, String(SCHEMA_VERSION));
     storage.setItem(STORAGE_KEYS.settings, JSON.stringify(clampSettings(settings)));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadSoundWarningAck(): boolean {
+  const storage = getStorage();
+  if (!storage) return false;
+  try {
+    return storage.getItem(STORAGE_KEYS.soundWarningAck) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveSoundWarningAck(): void {
+  const storage = getStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(STORAGE_KEYS.soundWarningAck, "1");
   } catch {
     /* ignore */
   }

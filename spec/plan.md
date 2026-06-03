@@ -930,7 +930,7 @@ graph TD
 
 ## 計画 P4-A: 初回アクセス時の音声警告モーダル（F-020）
 
-**ステータス**: 未着手
+**ステータス**: 完了
 
 **目的**: 要件 F-020 を実装する。初回アクセス時に「音が鳴る」旨を伝えるモーダルダイアログを表示し、OK で閉じると localStorage に記憶して 2 回目以降は表示しない。音の有効化は既存 `audio-banner` に委ね、本モーダルは告知のみを担う。
 
@@ -940,30 +940,30 @@ graph TD
 
 **タスク**:
 
-- [ ] **テスト先行（RED）**
-  - [ ] `tests/unit/persistence.test.ts`（既存があれば追記、なければ新規）: `loadSoundWarningAck` が初期状態で `false` / `saveSoundWarningAck()` 後に `true` / `localStorage` 不可時も例外を投げず `false` を返すことを検証
-  - [ ] `tests/component/soundWarningModal.test.tsx`（新規）: 未確認時にモーダル（`data-testid="sound-warning-modal"`）が表示される / OK（`data-testid="sound-warning-ok"`）押下で非表示になり `saveSoundWarningAck` が呼ばれる / 確認済みフラグありで初回から非表示 / `role="dialog"` と `aria-modal="true"` を持つ
-  - [ ] `bun test` で新規テストが RED になることを確認
-- [ ] **実装（GREEN）**
-  - [ ] `src/lib/state/persistence.ts`: `STORAGE_KEYS.soundWarningAck = "dtmf:soundWarningAck"` 追加、`loadSoundWarningAck()` / `saveSoundWarningAck()` を追加（既存 `getStorage()` の try/catch ガードを踏襲）
-  - [ ] `src/islands/SoundWarningModal.tsx` を新規作成（`createSignal` でローカル表示状態、onMount で未確認なら表示・OK へフォーカス、`Escape`/OK で確認、document keydown のトラップと `onCleanup` 解除）
-  - [ ] `src/islands/PhoneApp.tsx`: `ServicesProvider` 直下（`Toast` 付近）に `<SoundWarningModal />` を追加
-  - [ ] `src/styles/global.css`: `.sound-modal__overlay` / `.sound-modal` / タイトル・本文・出現アニメ・`prefers-reduced-motion` 無効化を追加
-- [ ] **REFACTOR / 確認**
-  - [ ] `bash scripts/quality-gate.sh` PASS
-  - [ ] 既存テスト・E2E（`data-testid` 構造を壊していないこと）が全 pass
-- [ ] **ドキュメント更新**
-  - [ ] 本計画のチェックボックスを `[x]` に更新
-  - [ ] `spec/requirements.md` F-020 受け入れ基準を `[x]` に更新
-  - [ ] `spec/status.md` 直近の状況・次のアクションを更新
+- [x] **テスト先行（RED）**
+  - [x] `tests/unit/persistence.test.ts`（既存があれば追記、なければ新規）: `loadSoundWarningAck` が初期状態で `false` / `saveSoundWarningAck()` 後に `true` / `localStorage` 不可時も例外を投げず `false` を返すことを検証
+  - [x] `tests/component/soundWarningModal.test.tsx`（新規）: 未確認時にモーダル（`data-testid="sound-warning-modal"`）が表示される / OK（`data-testid="sound-warning-ok"`）押下で非表示になり `saveSoundWarningAck` が呼ばれる / 確認済みフラグありで初回から非表示 / `role="dialog"` と `aria-modal="true"` を持つ
+  - [x] `bun test` で新規テストが RED になることを確認
+- [x] **実装（GREEN）**
+  - [x] `src/lib/state/persistence.ts`: `STORAGE_KEYS.soundWarningAck = "dtmf:soundWarningAck"` 追加、`loadSoundWarningAck()` / `saveSoundWarningAck()` を追加（既存 `getStorage()` の try/catch ガードを踏襲）
+  - [x] `src/islands/SoundWarningModal.tsx` を新規作成（`createSignal` でローカル表示状態、onMount で未確認なら表示・OK へフォーカス、`Escape`/OK で確認、document keydown のトラップと `onCleanup` 解除）
+  - [x] `src/islands/PhoneApp.tsx`: `ServicesProvider` 直下（`Toast` 付近）に `<SoundWarningModal />` を追加
+  - [x] `src/styles/global.css`: `.sound-modal__overlay` / `.sound-modal` / タイトル・本文・出現アニメ・`prefers-reduced-motion` 無効化を追加
+- [x] **REFACTOR / 確認**
+  - [x] `bash scripts/quality-gate.sh` PASS
+  - [x] 既存テスト・E2E（`data-testid` 構造を壊していないこと）が全 pass
+- [x] **ドキュメント更新**
+  - [x] 本計画のチェックボックスを `[x]` に更新
+  - [x] `spec/requirements.md` F-020 受け入れ基準を `[x]` に更新
+  - [x] `spec/status.md` 直近の状況・次のアクションを更新
 
 **完了条件**:
-- [ ] 初回アクセス（localStorage クリーン）でモーダルが表示され、OK で閉じてフラグが保存される
-- [ ] 2 回目以降の訪問でモーダルが表示されない
-- [ ] `role="dialog"` / `aria-modal` / OK へのフォーカス / `Escape` 閉じが機能する
-- [ ] localStorage 不可環境でもクラッシュせず表示・クローズできる
-- [ ] `bash scripts/quality-gate.sh` PASS
-- [ ] 既存 E2E / `data-testid` 構造を破壊していない
+- [x] 初回アクセス（localStorage クリーン）でモーダルが表示され、OK で閉じてフラグが保存される
+- [x] 2 回目以降の訪問でモーダルが表示されない
+- [x] `role="dialog"` / `aria-modal` / OK へのフォーカス / `Escape` 閉じが機能する
+- [x] localStorage 不可環境でもクラッシュせず表示・クローズできる
+- [x] `bash scripts/quality-gate.sh` PASS
+- [x] 既存 E2E / `data-testid` 構造を破壊していない
 
 **影響範囲**:
 - `src/lib/state/persistence.ts`

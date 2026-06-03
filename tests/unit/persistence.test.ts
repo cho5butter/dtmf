@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
   DEFAULT_PERSISTED,
   loadDialHistory,
   loadPersistedState,
+  loadSoundWarningAck,
   rememberDialHistory,
   SCHEMA_VERSION,
   STORAGE_KEYS,
+  saveSoundWarningAck,
 } from "../../src/lib/state/persistence";
 
 describe("persistence", () => {
@@ -42,5 +44,44 @@ describe("persistence", () => {
 
   test("writes schema version on save via setMode in store tests", () => {
     expect(DEFAULT_PERSISTED.schemaVersion).toBe(1);
+  });
+});
+
+describe("sound warning acknowledgement persistence (F-020)", () => {
+  beforeEach(() => {
+    localStorage.removeItem(STORAGE_KEYS.soundWarningAck);
+  });
+
+  afterEach(() => {
+    localStorage.removeItem(STORAGE_KEYS.soundWarningAck);
+  });
+
+  test("loadSoundWarningAck is false when nothing is stored (first access)", () => {
+    expect(loadSoundWarningAck()).toBe(false);
+  });
+
+  test("saveSoundWarningAck persists the flag and loadSoundWarningAck returns true", () => {
+    saveSoundWarningAck();
+    expect(loadSoundWarningAck()).toBe(true);
+  });
+
+  test("uses a schema-version-independent storage key", () => {
+    expect(STORAGE_KEYS.soundWarningAck).toBe("dtmf:soundWarningAck");
+  });
+
+  test("does not throw and returns false when localStorage access fails", () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      get() {
+        throw new Error("localStorage blocked");
+      },
+    });
+    try {
+      expect(() => saveSoundWarningAck()).not.toThrow();
+      expect(loadSoundWarningAck()).toBe(false);
+    } finally {
+      if (original) Object.defineProperty(globalThis, "localStorage", original);
+    }
   });
 });
