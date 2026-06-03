@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 設計（Phase 4 / 初回アクセス時の音声警告モーダル F-020）
-**ステータス**: 要件 F-020 は PR #52 マージで承認済み。設計フェーズとして `spec/design.md` に **P3-14** を追記（責務分離=告知のみ / localStorage キー `dtmf:soundWarningAck` / フルスクリーン固定オーバーレイ / フォーカストラップ / 既存バナーと共存 / TDD 方針）。ユーザーの承認待ち（承認後に計画フェーズへ）。
+**フェーズ**: 計画（Phase 4 / 初回アクセス時の音声警告モーダル F-020）
+**ステータス**: 要件 F-020（PR #52）・設計 P3-14（PR #53）はマージで承認済み。計画フェーズとして `spec/plan.md` に **計画 P4-A** を追加（TDD タスク: persistence ヘルパー → SoundWarningModal → CSS → PhoneApp 組込み）。ユーザーの承認待ち（承認後に実装フェーズへ）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -173,9 +173,9 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 設計 P3-14（`spec/design.md`）をユーザーに提示済み。**承認待ち**
-2. 承認後、計画フェーズへ進み `spec/plan.md` に新計画（P4-A: 音声警告モーダル）を追加
-3. 計画承認後、TDD で実装（persistence ヘルパー → SoundWarningModal → CSS → PhoneApp 組込み）
+1. 計画 P4-A（`spec/plan.md`）をユーザーに提示済み。**承認待ち**
+2. 承認後、実装フェーズへ進み TDD で実装（テスト先行 RED → persistence ヘルパー → SoundWarningModal → CSS → PhoneApp 組込み → GREEN）
+3. `bash scripts/quality-gate.sh` PASS を確認しコミット・プッシュ・PR
 4. 文言案「このアプリはボタン操作で音（電話のダイヤル音）が鳴ります。音量にご注意ください。」の可否も確認中
 
 **ブロッカー・懸念事項**:
