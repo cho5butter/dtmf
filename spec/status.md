@@ -44,12 +44,13 @@
 **最後に実施したこと**:
 
 *開いているマージリクエスト全件の main 取り込み（本セッション / 2026-06-03）*:
-- ユーザー指示「マージリクエストを全てマージして」を受け、open PR を確認し **#46 / #50 / #51 / #53** を対象化
+- ユーザー指示「マージリクエストを全てマージして」を受け、open PR を確認し **#46 / #50 / #51 / #53 / #54** を対象化
 - `main` に各 PR head commit を履歴へ含める形でマージ:
   - #46: `actions/checkout` 5 → 6
   - #50: `astro` 6.3.6 → 6.4.2
   - #51: `@biomejs/biome` 2.4.15 → 2.4.16
   - #53: F-020 音声警告モーダルの設計 P3-14（`spec/design.md` / `spec/status.md`）
+  - #54: F-020 音声警告モーダルの実装計画 P4-A（`spec/plan.md` / `spec/status.md`）
 - #50/#51 の CI 失敗原因になっていた `bun.lock` 未更新を `bun install` で同期し、追加コミット `設定: 依存更新後のBunロックを同期` を作成
 - ローカル検証: `bun install --frozen-lockfile` PASS、`bash scripts/quality-gate.sh` PASS（96 tests / 21.08 KB gzip）、`bun audit` は `No vulnerabilities found`
 - `origin/main` へ push 済み。GitHub 上の open PR は 0 件、main push の CI / Pages ワークフローはいずれも success
