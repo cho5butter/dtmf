@@ -1483,3 +1483,100 @@ P3-11 で `display__meta` 行内のインライン下線テキストに変更し
 ### 注記
 
 `navigator.audioSession` は iOS Safari 16.4+ の限定 API のため、TypeScript の `lib.dom` 型に含まれない。`audioSession.ts` 内で局所的にキャストして扱う。実機（iOS サイレントスイッチ ON）での発音確認は PR レビュー時に行う。
+
+## P3-14. 初回アクセス時の音声警告モーダル（F-020 / Phase 4 / 2026-06-03）
+
+> 経緯: ユーザー指示「初回アクセス時に音が鳴る旨の警告ポップアップを出してほしい」。公共の場などで不意に音が出る事故を防ぐため、初回訪問時に「音が鳴る」旨を明示するモーダルダイアログを表示する。ユーザー確認により「モーダル / 初回のみ（localStorage 記憶）/ 既存の音有効化バナーとは独立」と決定（要件 F-020）。
+
+### 方針
+
+- **責務の分離**: 本モーダルは「音が鳴る」旨の**告知のみ**を行う。AudioContext の resume（音の有効化）は既存の `audio-banner`（B-11）に委ねる。両者は目的が異なるため共存を許容する。
+- **配置**: `.phone-app` グリッドの内側ではなく、`Toast` と同様に **`ServicesProvider` 直下のフルスクリーン固定オーバーレイ**として描画する（グリッドエリアを占有しない）。
+- **永続化**: 確認済みフラグを `localStorage` に保存し、2 回目以降は表示しない。既存の `persistence.ts` の薄いラッパ方針に揃える。
+- **SSR 安全性**: `client:only` 構成だが、`localStorage` アクセスは既存 `getStorage()`（try/catch + `typeof localStorage === "undefined"` ガード）経由とし、利用不可時はフォールバック（記憶できないだけで表示・クローズは可能）。
+
+### 状態とデータフロー
+
+```mermaid
+flowchart TD
+    M[SoundWarningModal onMount] --> C{loadSoundWarningAck}
+    C -->|未確認| S[setVisible_true: OKボタンへフォーカス]
+    C -->|確認済み| H[非表示のまま]
+    S -->|OK 押下 / Escape| A[saveSoundWarningAck: setVisible_false]
+```
+
+- モーダルの表示状態は**コンポーネントローカルの `createSignal<boolean>`** で保持する（アプリ全体状態への影響がないため store には載せない）。
+- onMount で `loadSoundWarningAck()` を読み、未確認なら `setVisible(true)`。SSR では onMount が走らないため初期値は `false`（=非表示）で安全。
+
+### `lib/state/persistence.ts` への追加
+
+- `STORAGE_KEYS` に `soundWarningAck: "dtmf:soundWarningAck"` を追加。
+- `loadSoundWarningAck(): boolean` — フラグが `"1"` なら `true`、それ以外/未設定/storage 不可なら `false`。
+- `saveSoundWarningAck(): void` — `setItem(STORAGE_KEYS.soundWarningAck, "1")`。storage 不可時は no-op（既存の他 save 関数と同じ try/catch）。
+- スキーマバージョンとは独立のキーとし、`SCHEMA_VERSION` 不一致でリセットされても**消えない**（音警告の確認は設定スキーマと無関係なため）。
+
+### コンポーネント `src/islands/SoundWarningModal.tsx`（新規）
+
+```
+<Show when={visible()}>
+  <div class="sound-modal__overlay" role="presentation" onClick={背景クリックでは閉じない}>
+    <div class="sound-modal" role="dialog" aria-modal="true"
+         aria-labelledby="sound-modal-title" aria-describedby="sound-modal-desc"
+         data-testid="sound-warning-modal">
+      <h2 id="sound-modal-title" class="sound-modal__title">音が鳴ります</h2>
+      <p id="sound-modal-desc" class="sound-modal__desc">
+        このアプリはボタン操作で音（電話のダイヤル音）が鳴ります。音量にご注意ください。
+      </p>
+      <button type="button" class="t-btn t-btn--primary" data-testid="sound-warning-ok"
+              ref={okButton} onClick={acknowledge}>
+        <span class="t-btn__label">OK</span>
+      </button>
+    </div>
+  </div>
+</Show>
+```
+
+- **フォーカス管理**: 表示時に `okButton.focus()`（`onMount` 後の `queueMicrotask` か `Show` の `ref` コールバック）。`acknowledge()` で `saveSoundWarningAck()` → `setVisible(false)`。
+- **キーボード**: モーダル表示中は document に `keydown` リスナを張り、`Escape` で `acknowledge()`。`Tab` はモーダル内に OK ボタン 1 つのみのため自然にトラップされる（フォーカスを OK に固定する簡易トラップ）。表示中は背後の `PhoneApp` の `handleKeyboard`（DTMF/Enter）が誤発火しないよう、モーダルの keydown ハンドラで `Escape` 以外を `stopPropagation`／`preventDefault`（少なくとも Enter / DTMF キーを抑止）する。
+- **背景操作の抑止**: オーバーレイは `position: fixed; inset: 0` で全面を覆い `pointer-events` を受けるため、背後のクリックは届かない。背景クリックでは**閉じない**（明示的な OK のみで閉じる）。
+- **クリーンアップ**: `onCleanup` で document リスナを解除。
+
+### CSS（`src/styles/global.css` に追加）
+
+| セレクタ | 役割 | 主なプロパティ |
+|---------|------|--------------|
+| `.sound-modal__overlay` | 全面オーバーレイ | `position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: color-mix(in srgb, var(--ink) 55%, transparent);` |
+| `.sound-modal` | ダイアログ本体 | `background: var(--paper); color: var(--ink); border: var(--hair); box-shadow: var(--shadow-hard); border-radius: 0; max-width: 420px; width: 100%; padding: 24px; display: grid; gap: 16px;` |
+| `.sound-modal__title` | 見出し | サンセリフ、`letter-spacing: -0.02em`、`font-size: 20px` |
+| `.sound-modal__desc` | 本文 | `line-height: 1.5; color: var(--ink)` |
+| OK ボタン | 既存 `.t-btn` / `.t-btn--primary` を再利用 | — |
+
+- **z-index 設計**: Toast は `z-index: 50`。本モーダルは最前面の操作要素として `z-index: 1000`。装飾ノイズ（`body::before` の `z-index: 999`）は `pointer-events: none` のため操作には影響しないが、モーダルを鮮明に見せるため 1000 を採用する。
+- **出現アニメーション**: `@keyframes` で `opacity` + わずかな `translateY` のフェードイン（150ms）。`@media (prefers-color-scheme: dark)` ではオーバーレイの色は `--ink`/`--paper` 入替に追従（`color-mix` が自動対応）。
+- **`prefers-reduced-motion: reduce`**: `.sound-modal { animation: none; }` で出現アニメを無効化（既存方針を踏襲）。
+
+### アクセシビリティ（F-018 / NFR-007）
+
+- `role="dialog"` + `aria-modal="true"` + `aria-labelledby` / `aria-describedby`。
+- 表示時に OK ボタンへフォーカス移動、`Escape` で閉じる。
+- コントラストは `--paper`（背景）/ `--ink`（文字）の 2 値で 4.5:1 以上を満たす。
+- 最小タップ領域 44px は `.t-btn` の既存指定で担保。
+
+### 影響範囲
+
+- `src/lib/state/persistence.ts`（`STORAGE_KEYS` 追加 / `loadSoundWarningAck` / `saveSoundWarningAck`）
+- `src/islands/SoundWarningModal.tsx`（新規）
+- `src/islands/PhoneApp.tsx`（`<SoundWarningModal />` を `ServicesProvider` 直下・`Toast` 付近に追加）
+- `src/styles/global.css`（`.sound-modal*` 追加）
+
+### テスト方針（TDD）
+
+| テスト種別 | 対象 | 概要 |
+|-----------|------|------|
+| 単体 | `persistence.ts` | `loadSoundWarningAck` 初期 `false` / `save→load` で `true` / storage 不可時に例外を投げず `false` |
+| コンポーネント | `SoundWarningModal` | 未確認 → モーダル表示（`sound-warning-modal` 可視）/ OK 押下で非表示＋フラグ保存 / 確認済みフラグありで初回から非表示 / `role="dialog"`・`aria-modal` 属性の存在 |
+
+### 注記
+
+- 既存の `audio-banner` は `.phone-app` グリッド内の `banner` エリアに表示される。モーダルはその上（最前面）に重なるが、ユーザーが OK を押せば即座に消え、その後バナー導線に進めるため UX 上の競合はない。
+- localStorage キー `dtmf:soundWarningAck` はスキーマバージョン管理外。将来文言を大きく変えて再告知したい場合はキー名にサフィックス（例 `:v2`）を付けて再表示する運用とする。
