@@ -10,13 +10,19 @@ export function shouldShowSoundWarning(): boolean {
   return !loadSoundWarningAck();
 }
 
-export default function SoundWarningModal() {
+interface SoundWarningModalProps {
+  /** F-021: 確認操作（OK / Escape）と同時に音声（AudioContext）を有効化するためのコールバック */
+  onAcknowledge?: () => void;
+}
+
+export default function SoundWarningModal(props: SoundWarningModalProps) {
   const [visible, setVisible] = createSignal(false);
   let okButton: HTMLButtonElement | undefined;
 
   const acknowledge = () => {
     saveSoundWarningAck();
     setVisible(false);
+    props.onAcknowledge?.();
   };
 
   // モーダル表示中は背後の PhoneApp の DTMF/Enter ハンドラへキー入力が伝播しないよう抑止し、

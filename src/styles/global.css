@@ -149,7 +149,6 @@ button {
   min-width: 0;
 }
 
-.phone-app > .audio-banner,
 .phone-app > .audio-error {
   grid-area: banner;
 }
@@ -1085,42 +1084,7 @@ button {
   font-weight: 700;
 }
 
-/* ─────────── Audio banner / error ─────────── */
-
-.audio-banner {
-  border: var(--hair);
-  background: var(--signal);
-  color: var(--paper);
-  padding: var(--s-3) var(--s-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  box-shadow: var(--shadow-hard);
-}
-
-.audio-banner__title {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.audio-banner__hint {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--paper);
-  opacity: 0.85;
-}
-
-.audio-banner .t-btn {
-  align-self: flex-start;
-  background: var(--paper);
-  color: var(--ink);
-  border-color: var(--paper);
-  box-shadow: 4px 4px 0 var(--paper);
-  min-height: 44px;
-}
+/* ─────────── Audio error ─────────── */
 
 .audio-error {
   color: var(--signal);

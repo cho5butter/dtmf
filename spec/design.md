@@ -1580,3 +1580,64 @@ flowchart TD
 
 - 既存の `audio-banner` は `.phone-app` グリッド内の `banner` エリアに表示される。モーダルはその上（最前面）に重なるが、ユーザーが OK を押せば即座に消え、その後バナー導線に進めるため UX 上の競合はない。
 - localStorage キー `dtmf:soundWarningAck` はスキーマバージョン管理外。将来文言を大きく変えて再告知したい場合はキー名にサフィックス（例 `:v2`）を付けて再表示する運用とする。
+- → **本方針（「責務の分離」「共存を許容」）は P3-15 / F-021 により改訂**。モーダルの OK 操作が音の有効化を兼ねるようになり、`audio-banner` の UI は撤去される。
+
+## P3-15. 音声関連プロンプトの統合（F-021 / Phase 5 補正 / 2026-07-23）
+
+> 経緯: ユーザー指示「音が鳴ります。音を有効にする。どちらか片方だけでいいです」。P3-14（F-020）は「モーダル＝告知のみ、有効化はバナーに委ねる」という責務分離を採用したが、結果として初回訪問時に「音が鳴ります」モーダルと「音を有効にしてください」バナーの 2 段階の確認をユーザーに強いる形になっていた。ユーザー確認により**警告モーダルへ一本化**すると決定（要件 F-021）。
+
+### 方針
+
+- P3-14 の「責務の分離」方針を撤回し、`SoundWarningModal` の確認操作（OK ボタン / `Escape`）に AudioContext の有効化を統合する。
+- `PhoneApp.tsx` の `activateAudio`（既存の `engine.ensureContext().then(() => setContextSuspended(false)).catch(() => setContextSuspended(true))`）をそのまま再利用し、`SoundWarningModal` に `onAcknowledge?: () => void` プロパティとして渡す。モーダル側は永続化ライブラリのみを知り、AudioContext を直接扱わない（既存の関心分離を維持）。
+- `PhoneApp.tsx` の `<Show when={appState.audio.contextSuspended}>` による `audio-banner` ブロック（見出し・説明文・「有効にする」ボタン）は削除する。
+- B-11 で導入した以下は**撤去しない**（表示手段＝バナーのみを廃止する）:
+  - `engine.getContextState()` / onMount での `setContextSuspended` 観測
+  - `configureAudioSessionForPlayback`（iOS サイレントスイッチ対策）
+  - `RotaryDial.tsx` / `useDialRelease.ts` / `handleKeyboard` 内の `ensureContext().then(setContextSuspended(false)).catch(setContextSuspended(true))` 呼び出し（キー押下・ダイヤル操作時の有効化導線は従来通り維持し、モーダルを確認しなかった万一のケースのフォールバックとする）
+  - `tests/component/audioSessionContract.test.tsx`（ソースレベル契約）は変更不要のまま GREEN を維持する
+
+### コンポーネント変更
+
+`src/islands/SoundWarningModal.tsx`:
+
+```tsx
+interface SoundWarningModalProps {
+  onAcknowledge?: () => void;
+}
+
+export default function SoundWarningModal(props: SoundWarningModalProps) {
+  ...
+  const acknowledge = () => {
+    saveSoundWarningAck();
+    setVisible(false);
+    props.onAcknowledge?.();
+  };
+  ...
+}
+```
+
+`src/islands/PhoneApp.tsx`:
+
+- `<Show when={appState.audio.contextSuspended}>...</Show>`（`audio-banner`）ブロックを削除。
+- `<SoundWarningModal />` を `<SoundWarningModal onAcknowledge={activateAudio} />` に変更。
+
+### 影響範囲
+
+- `src/islands/SoundWarningModal.tsx`（`onAcknowledge` プロパティ追加）
+- `src/islands/PhoneApp.tsx`（`audio-banner` ブロック削除、`SoundWarningModal` への prop 追加）
+- `src/styles/global.css`（`.audio-banner*` が未使用になるため削除）
+- `spec/requirements.md`（F-021 追加、F-020 / B-11 の該当受け入れ基準に改訂注記）
+
+### テスト方針（TDD）
+
+| テスト種別 | 対象 | 概要 |
+|-----------|------|------|
+| ソース契約 | `soundWarningModal.test.tsx` | `SoundWarningModal.tsx` が `onAcknowledge` を呼び出すこと（ソース文字列に `props.onAcknowledge` を含む）を検証 |
+| ソース契約 | `soundWarningModal.test.tsx` | `PhoneApp.tsx` が `audio-banner` を含まないこと、`SoundWarningModal` に `onAcknowledge` を渡していることを検証 |
+| 既存維持 | `audioSessionContract.test.tsx` | 変更不要。`getContextState` / `setContextSuspended` の存在を引き続き保証（GREEN 維持） |
+
+### 注記
+
+- バナー撤去後も `appState.audio.contextSuspended` の状態自体は保持する（B-11 の観測ロジック・契約テストが依存するため）。UI としては未使用になるが、将来的な診断・再表示の拡張余地として残す。
+- モーダルの `onAcknowledge` 呼び出しはユーザーの明示的なクリック/キー操作のコールスタック内で行われるため、ブラウザの自動再生ポリシー（ユーザージェスチャ要件）を満たす。

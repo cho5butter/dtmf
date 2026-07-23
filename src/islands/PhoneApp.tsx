@@ -131,8 +131,8 @@ export default function PhoneApp() {
       if (banner) banner.style.display = "block";
     }
     engine.setVolume(appState.settings.volume);
-    // B-11: モバイル（特に iOS）では AudioContext が suspended のまま起動するため、
-    // 状態を観測して「音を有効にしてください」バナーの表示要否を判定する。
+    // B-11: モバイル（特に iOS）では AudioContext が suspended のまま起動するため、状態を観測しておく。
+    // F-021: 有効化は SoundWarningModal の確認操作（onAcknowledge）に統合済み。
     if (supported) {
       setContextSuspended(engine.getContextState() === "suspended");
     }
@@ -156,16 +156,6 @@ export default function PhoneApp() {
   return (
     <ServicesProvider value={{ engine, sequencer, runAutoPlay, stopAll }}>
       <div class="phone-app" data-testid="phone-app">
-        <Show when={appState.audio.contextSuspended}>
-          <div class="audio-banner" role="status">
-            <p class="audio-banner__title">▶ 音を有効にしてください</p>
-            <p class="audio-banner__hint">スマホでは最初に 1 タップが必要です</p>
-            <button type="button" class="t-btn" onClick={activateAudio}>
-              <span class="t-btn__icon">▸</span>
-              <span class="t-btn__label">有効にする</span>
-            </button>
-          </div>
-        </Show>
         <Show when={!appState.audio.supported}>
           <p class="audio-error" role="alert">
             Web Audio API に対応していません
@@ -184,7 +174,7 @@ export default function PhoneApp() {
         <DetailPanel />
       </div>
       <Toast />
-      <SoundWarningModal />
+      <SoundWarningModal onAcknowledge={activateAudio} />
       <div class="sr-only" aria-live="polite" id="playback-announcer">
         {appState.playback === "auto_running" && appState.currentDigitIdx >= 0
           ? `再生中: ${appState.digits[appState.currentDigitIdx]}`
