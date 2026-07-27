@@ -976,6 +976,50 @@ graph TD
 
 ---
 
+## 計画 P4-B: 音声関連プロンプトの統合（F-021）
+
+**ステータス**: 完了
+
+**目的**: 要件 F-021 を実装する。「音が鳴ります」警告モーダルの OK（または `Escape`）操作に AudioContext の有効化（`ensureContext`）を統合し、独立して表示されていた `audio-banner`（「音を有効にしてください」バナー）の UI を撤去する。B-11 の AudioContext 状態観測・iOS サイレントスイッチ対策は維持する。
+
+**前提条件**: `spec/requirements.md` F-021 受け入れ基準、`spec/design.md` P3-15
+
+**依存する計画**: P4-A（音声警告モーダル）、P3-L（B-11 バナー・状態観測基盤）
+
+**タスク**:
+
+- [x] **テスト先行（RED）**
+  - [x] `tests/component/soundWarningModal.test.tsx`: `SoundWarningModal.tsx` のソースが `props.onAcknowledge` を呼び出すことを検証するテストを追加
+  - [x] `tests/component/soundWarningModal.test.tsx`: `PhoneApp.tsx` のソースが `audio-banner` を含まないこと、`SoundWarningModal` に `onAcknowledge` を渡していることを検証するテストを追加
+  - [x] `bun test` で新規テストが RED になることを確認
+- [x] **実装（GREEN）**
+  - [x] `src/islands/SoundWarningModal.tsx`: `onAcknowledge?: () => void` プロパティを追加し、`acknowledge()` 内で `saveSoundWarningAck()` / `setVisible(false)` に続けて呼び出す
+  - [x] `src/islands/PhoneApp.tsx`: `<Show when={appState.audio.contextSuspended}>`（`audio-banner`）ブロックを削除し、`<SoundWarningModal onAcknowledge={activateAudio} />` に変更
+  - [x] `src/styles/global.css`: 未使用になった `.audio-banner*` を削除
+- [x] **REFACTOR / 確認**
+  - [x] `bash scripts/quality-gate.sh` PASS
+  - [x] `tests/component/audioSessionContract.test.tsx`（B-11 契約テスト）が変更なしで GREEN のまま
+- [x] **ドキュメント更新**
+  - [x] 本計画のチェックボックスを `[x]` に更新
+  - [x] `spec/requirements.md` F-021 受け入れ基準を `[x]` に更新
+  - [x] `spec/status.md` 直近の状況・次のアクションを更新
+
+**完了条件**:
+- [x] モーダルの OK / `Escape` 操作で確認フラグ保存と `ensureContext()` 呼び出しが同時に行われる
+- [x] `audio-banner` の UI が画面上から撤去されている
+- [x] B-11 のソースレベル契約テストが GREEN のまま
+- [x] `bash scripts/quality-gate.sh` PASS
+
+**影響範囲**:
+- `src/islands/SoundWarningModal.tsx`
+- `src/islands/PhoneApp.tsx`
+- `src/styles/global.css`
+- `tests/component/soundWarningModal.test.tsx`
+
+**テスト方針**: TDD（テスト先行）。ソースレベル契約テストで `onAcknowledge` 呼び出しと `audio-banner` 撤去を保証する。
+
+---
+
 ## 最終計画（固定・必須）: 脆弱性レビュー
 
 **ステータス**: 完了
@@ -1024,6 +1068,31 @@ graph TD
 - 静的配信・CSP・入力正規化で OWASP 観点を緩和
 - Astro 5 系のパッチ版公開後に Dependabot / 手動更新で追随予定
 - Dependabot npm / github-actions を有効化済み
+
+---
+
+**実施日**: 2026-07-23（P4-B マージ前の再スキャン）
+
+**背景**: P4-B（音声関連プロンプトの統合）とあわせて、オープン中の Dependabot PR（#63 / #65 / #69 / #70 / #72 / #75 / #76 / #77 / #78 / #79 / #80）の内容を本 PR に統合（astro 6.4.2→7.1.3、@astrojs/solid-js 6.0.1→7.0.1、solid-js 1.9.13→1.9.14、typescript 6.0.3→7.0.2、@biomejs/biome 2.4.16→2.5.3、@tailwindcss/vite・tailwindcss 4.3.0→4.3.2、@playwright/test 1.60.0→1.61.1、@axe-core/playwright 4.11.3→4.12.1、happy-dom 20.9.0→20.10.6、`actions/checkout` v6→v7）。パッケージバージョン選定ルール（3 日前時点の最新安定版）に従い、各パッケージの npm registry 公開日を確認した上で選定した。
+
+**実装レビュー結果**: 本セッションの実装差分（`SoundWarningModal.tsx` / `PhoneApp.tsx` / `global.css`）はローカル状態の配線変更のみで、外部入力・DOM 挿入・認可の変更なし。`innerHTML` / `set:html` は引き続き未使用。新規に外部通信・秘密情報を扱うコードは追加していない。
+
+**パッケージスキャン結果** (`bun audit`):
+- 依存更新直後（astro 7.0.7 時点）: 6 件（High 3 / Moderate 2 / Low 1）
+  - `astro`（moderate, GHSA-4g3v-8h47-v7g6, View Transition 経由の Reflected XSS）→ 本プロジェクトは View Transitions（`document.startViewTransition` ラッパー）を使用するが、動的な `transition:name` 等はユーザー入力由来ではなくコード側で固定しているため実害リスクは低いと判断しつつ、修正版が存在したため **astro を 7.1.3 へ追加更新して解消**（アドバイザリの修正範囲は `<=7.0.9`）
+  - `svgo`（high, GHSA-2p49-hgcm-8545, astro の内部依存）→ `overrides` で `svgo@4.0.2` に固定して解消
+  - `sharp`（high, GHSA-f88m-g3jw-g9cj, astro の内部依存）→ `overrides` で `sharp@0.35.3` に固定して解消
+  - `js-yaml`（moderate/high, GHSA-h67p-54hq-rp68 / GHSA-52cp-r559-cp3m, astro の内部依存）→ `overrides` で `js-yaml@4.3.0` に固定して解消（`5.x` は ESM 既定エクスポート形式が変わり `astro build` が壊れるため 4.x 系の修正版を採用）
+  - `@babel/core`（low, GHSA-4x5r-pxfx-6jf8, `vite-plugin-solid` 経由）→ 修正版は `8.x`（メジャー）のみで `babel-preset-solid` の peer 範囲（`^7.x`）を超えるため、ビルド破壊リスクを避けて **保留**。Low severity であり実行時の外部ソースマップ読込を伴わない静的ビルドのみで使用するため実害は限定的と判断
+- 対応後の残存: **1 件（Low）のみ**。High / Critical は 0 件
+- GitHub Security タブ（Dependabot アラート）: 上記依存更新および `overrides` 追加により、対応する Dependabot PR は次回スキャンでクローズされる見込み
+
+**対応内容**:
+- `package.json` の依存関係を上記バージョンへ更新し、`overrides` で `svgo` / `sharp` / `js-yaml` を修正版に固定
+- `bun.lock` を再生成し `bun install --frozen-lockfile` で再現性を確認
+- `bash scripts/quality-gate.sh` PASS（107 tests / 21.32 KB gzip）を再確認
+- `.github/workflows/ci.yml` / `pages.yml` の `actions/checkout` を `v6` → `v7` に更新
+- 保留とした `@babel/core` の low 脆弱性は `spec/status.md` に残課題として明記
 
 ---
 

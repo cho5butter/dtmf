@@ -42,3 +42,17 @@ describe("SoundWarningModal markup contract (F-020 / a11y)", () => {
     expect(src).toContain("SoundWarningModal");
   });
 });
+
+describe("F-021: 音声関連プロンプトの統合（警告モーダルへの一本化）", () => {
+  test("acknowledging the modal also invokes onAcknowledge (audio activation)", async () => {
+    const src = await Bun.file("src/islands/SoundWarningModal.tsx").text();
+    expect(src).toContain("onAcknowledge");
+    expect(src).toContain("props.onAcknowledge?.()");
+  });
+
+  test("PhoneApp passes onAcknowledge to enable audio and no longer renders a separate audio-banner", async () => {
+    const src = await Bun.file("src/islands/PhoneApp.tsx").text();
+    expect(src).toContain("<SoundWarningModal onAcknowledge={activateAudio} />");
+    expect(src).not.toContain("audio-banner");
+  });
+});

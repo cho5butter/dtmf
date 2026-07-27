@@ -6,8 +6,8 @@
 
 ## 現在フェーズ
 
-**フェーズ**: 実装（Phase 4 / 初回アクセス時の音声警告モーダル F-020）
-**ステータス**: 要件 F-020（PR #52）・設計 P3-14（PR #53）・計画 P4-A（PR #54）はマージで承認済み。計画 P4-A を TDD で実装完了（テスト先行 RED → 実装 GREEN）。`bash scripts/quality-gate.sh` PASS（105 tests / 21.5 KB gzip）。
+**フェーズ**: 実装（Phase 5 / 音声関連プロンプトの統合 F-021）
+**ステータス**: 要件 F-021・設計 P3-15・計画 P4-B を本セッション内で追加し（ユーザー指示への直接対応・小規模な UX 統合のため単一セッションで要件〜実装を一貫実施）、TDD で実装完了（テスト先行 RED → 実装 GREEN）。あわせてオープン中の Dependabot PR 群をこのブランチに統合し、依存更新に伴う脆弱性を解消。`bash scripts/quality-gate.sh` PASS（107 tests / 21.32 KB gzip）。
 
 ```
 [x] フェーズ1: 要件定義(v1)
@@ -26,6 +26,10 @@
 [x] フェーズ2: 設計(Phase 4)
 [x] フェーズ3: 計画(Phase 4)
 [x] フェーズ4: 実装(Phase 4)
+[x] フェーズ1: 要件定義(Phase 5)
+[x] フェーズ2: 設計(Phase 5)
+[x] フェーズ3: 計画(Phase 5)
+[x] フェーズ4: 実装(Phase 5)
 ```
 
 ## フェーズ履歴
@@ -42,10 +46,31 @@
 | 実装 (Phase 2) | 2026-05-23 | — | Cursor Agent | ミニマルUI・ためて解放 UX・`client:only`・品質ゲート PASS |
 | 要件定義(v2 監査) | 2026-05-23 | — | Claude Code (Opus 4.7) | `main` 上で UI/UX 監査（F-011〜F-013 / B1〜B8 追記）。ブランチ実装と統合予定 |
 | 要件定義 (Phase 3) | 2026-05-23 | 2026-05-23 | Claude Code (Opus 4.7) | デザイン完全再構築（F-014〜F-018 / NFR-012〜014）。PR #27 マージで承認 |
+| 要件定義〜実装 (Phase 5) | 2026-07-23 | — | Claude Code (Sonnet 5) | 音声関連プロンプト統合（F-021 / P3-15 / P4-B）。ユーザー指示「音が鳴ります。音を有効にする。どちらか片方だけでいいです」を受け、`AskUserQuestion` で統合方針（警告モーダルへ一本化）を確認した上で要件・設計・計画・実装を本ブランチ内で一貫実施 |
 
 ## 直近の状況
 
 **最後に実施したこと**:
+
+*音声関連プロンプトの統合 + オープン Dependabot PR 群の取り込み（本ブランチ `claude/audio-enable-lmmzne` / 2026-07-23）*:
+- ユーザー指示「音が鳴ります。音を有効にする。どちらか片方だけでいいです。他のPRの内容もこのPRで編集してください」
+- `AskUserQuestion` で統合方針を確認: 「音が鳴ります」警告モーダル（F-020）と「音を有効にしてください」バナー（B-11）の 2 つの音声関連プロンプトのうち、**警告モーダルに一本化**（モーダルの OK 操作で AudioContext の有効化も兼ねる）を選択
+- 要件 **F-021** / 設計 **P3-15** / 計画 **P4-B** を追加（小規模な UX 統合のため、要件〜実装を単一セッション内で一貫実施。過去の B-09〜B-11 バグ修正と同様のパターン）
+- TDD: 先に `tests/component/soundWarningModal.test.tsx` に `onAcknowledge` 呼び出し検証・`PhoneApp.tsx` に `audio-banner` が存在しないことを検証するテストを追加し RED 確認 → 実装 → GREEN
+- 実装:
+  - `SoundWarningModal.tsx`: `onAcknowledge?: () => void` プロパティを追加。`acknowledge()`（OK / `Escape`）で `saveSoundWarningAck()` に続けて呼び出す
+  - `PhoneApp.tsx`: `<Show when={appState.audio.contextSuspended}>` の `audio-banner` ブロック（「▶ 音を有効にしてください」+「有効にする」ボタン）を削除。`<SoundWarningModal onAcknowledge={activateAudio} />` に変更。B-11 の状態観測（`getContextState` / `setContextSuspended`）自体は維持
+  - `global.css`: 未使用になった `.audio-banner` 系セレクタを削除
+- `tests/component/audioSessionContract.test.tsx`（B-11 契約テスト）は変更なしで GREEN のまま
+- **オープン PR の統合**（ユーザー指示「他のPRの内容もこのPRで編集してください」）: Dependabot の未マージ PR #63 / #65 / #69 / #70 / #72 / #75 / #76 / #77 / #78 / #79 / #80 の内容をこのブランチに統合
+  - `astro` 6.4.2 → 7.1.3（PR #78 は 7.0.7 提案だったが、`bun audit` で検出した astro 自体の moderate 脆弱性 GHSA-4g3v-8h47-v7g6 の修正版として 7.1.3 まで追加更新。パッケージバージョン選定ルール上も 2026-07-20 公開で許容範囲内）
+  - `@astrojs/solid-js` 6.0.1 → 7.0.1（PR #76）、`solid-js` 1.9.13 → 1.9.14（PR #75）
+  - `typescript` 6.0.3 → 7.0.2（PR #80）、`@biomejs/biome` 2.4.16 → 2.5.3（PR #79）
+  - `@tailwindcss/vite` / `tailwindcss` 4.3.0 → 4.3.2（PR #77 / #72）
+  - `@playwright/test` 1.60.0 → 1.61.1（PR #69）、`@axe-core/playwright` 4.11.3 → 4.12.1（PR #70）、`happy-dom` 20.9.0 → 20.10.6（PR #65）
+  - `.github/workflows/ci.yml` / `pages.yml` の `actions/checkout` v6 → v7（PR #63）
+- 依存更新に伴う `bun audit` 再スキャンで High 3 件・Moderate 2 件を検出（astro 本体の moderate XSS、および astro が内部依存する `svgo` / `sharp` / `js-yaml` の high/moderate）。astro を 7.1.3 へ追加更新し、`package.json` に `overrides`（`svgo@4.0.2` / `sharp@0.35.3` / `js-yaml@4.3.0`）を追加してすべて解消。残るは `@babel/core`（low, `vite-plugin-solid` 経由, 修正版が peer 範囲外のメジャーのみのため保留）の 1 件のみ。詳細は `spec/plan.md` 最終計画「脆弱性レビュー」の 2026-07-23 追記を参照
+- `bash scripts/quality-gate.sh` PASS（107 tests / 21.32 KB gzip）
 
 *初回アクセス時の音声警告モーダル実装（本ブランチ `claude/first-access-sound-warning-URwGb` / 2026-06-03）*:
 - ユーザー指示「初回アクセス時に音が鳴る旨の警告ポップアップを出してほしい」
@@ -190,15 +215,17 @@
 - `bash scripts/quality-gate.sh` PASS（77 tests / 18.82 KB gzip）
 
 **次のアクション**:
-1. 実装（計画 P4-A）をコミット・プッシュし、draft PR を作成
-2. PR の CI 通過を確認しレビュー対応
-3. マージ後、実機で初回アクセス時にモーダルが表示され、OK で閉じて 2 回目以降は出ないことを確認してもらう
-4. 将来文言を大きく変えて再告知したい場合は localStorage キーに `:v2` 等のサフィックスを付ける運用（設計 P3-14 注記）
+1. 実装（計画 P4-B）をコミット・プッシュし、draft PR を作成
+2. PR の CI 通過を確認しレビュー対応（Dependabot 対象パッケージのメジャー更新を含むため、CI の E2E/Playwright 実行結果を優先的に確認）
+3. マージ後、実機で初回アクセス時にモーダルの OK を押すと同時に音が有効化され、以後キー操作等で即座に音が鳴ることを確認してもらう
+4. マージ後、GitHub Security タブで対応する Dependabot アラート（#63 / #65 / #69 / #70 / #72 / #75 / #76 / #77 / #78 / #79 / #80 相当）が解消されることを確認
+5. 将来文言を大きく変えて再告知したい場合は localStorage キーに `:v2` 等のサフィックスを付ける運用（設計 P3-14 注記、統合後も有効）
 
 **ブロッカー・懸念事項**:
 - v1 実装は GitHub Pages に既にデプロイ済み。マージ時に再デプロイされる
-- 2026-06-03 時点の `bun audit` は `No vulnerabilities found`
+- 2026-07-23 時点の `bun audit` は Low 1 件（`@babel/core`、`vite-plugin-solid` 経由、修正版がメジャーのみのため保留）。High/Critical は 0 件
 - Biome は既存の未使用変数・CSS specificity 等の警告を出すが、品質ゲート自体は PASS
+- astro 6.4.2 → 7.1.3 はメジャーバージョンアップ。`quality-gate.sh`（リント・ビルド・単体/コンポーネントテスト）は PASS。E2E（`RUN_E2E=1` / `bunx playwright test`）は CI では実行されておらず本セッションでも未確認（サンドボックス環境のプリインストール Chromium バージョンと `@playwright/test` 1.61.1 が要求するバージョンの不一致で起動失敗、コード変更起因ではない）。手元で `bunx playwright install` 後の E2E 確認を推奨
 - 今回のレビュー修正は既存 Phase 3 実装の UI/挙動調整として実施。仕様差分として正式反映が必要な場合は後続で要件/設計へ追記する
 
 ## プロジェクト初期化チェックリスト
