@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
-    "@biomejs/biome": "2.5.3",
+    "@biomejs/biome": "2.5.7",
     "@playwright/test": "1.61.1",
     "@size-limit/file": "12.1.0",
     "@solidjs/testing-library": "0.8.10",
